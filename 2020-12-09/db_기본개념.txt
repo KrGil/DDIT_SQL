@@ -1,0 +1,48 @@
+하재관
+이진우
+
+SQL/java : 프로그래밍 언어
+java : 로직을 제어
+
+SQL(Structured Query Language) : 구조화된 질의 언어
+  - RDBMS과 통신하기위한 유일한 수단
+
+키가 170이상이고, 발사이즈가 270이상인 남성의 모임
+
+RDBMS - 집합적 개념을 차용
+집합적인 개념에서는
+A = {a,b,c}
+B = {a,c,b}
+C = {a,b,b,c} ==>{a,b,c}
+하지만 현실에 맞춰서 반복, 순서를 알아챌수 있는 문법이 존재
+order by, distinct
+
+빅데이터, NO-sql : Not Only SQL
+구글 - 파이어 베이스, Mongo db
+
+제약조건
+0. Unique : 값에 중복을 허용하지 않음. 단 null은 가능
+1. Primary key == unique + not null
+	==> 중복방지 / 해당컬럼 값이 테이블에서 유일함을 보장, null 값이 들어갈 수 없다.
+2. fk(forein key) 참조 무결성
+3. check 제약
+not null ==>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

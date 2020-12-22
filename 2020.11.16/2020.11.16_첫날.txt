@@ -1,0 +1,42 @@
+
+2020.11.16 - 금요일까지 설치를 ppt로 정리해서 제출(과제)
+
+===========================================
+1. JAVA
+abc ->설치및 압축파일 -> 그외 -> BANDIZIP -> 아니오 전부
+
+-JAVA
+jdk 1.7
+jdk 1.8
+eclipse - kepler
+
+-DB
+oracle server
+oracle client
+sqldeveloper
+
+
+jdk안에 jre가 포함되어있음.(jre 자바 실행 환경설정)
+jdk 설치할 때 jre 설치 질문 뜨면 cancel 눌러야함.(경로 안꼬이게)
+
+환경변수 설정
+JAVA_HOME - D:\..
+Path -- %JAVA_HOME%\bin
+
+jre - java -version
+jdk - javac -version
+
+eclipse- kepler version
+eclipse(설정파일) 그 중에 메모리 할당부분을 변경하기. (1024 흠.)
+
+encoding - content Types - 전부 UTF-8(Text 안까지!!)
+
+===========================================
+2. DATABASE
+SQL - Join()!! 다른 테이블과 이어지게 만들기.
+도메인 - ex)성별 => 도메인이 2개다.
+Key... 자료형
+
+SQL - CRUD
+create readable update delete
+기본키 제약조건 - 유용성 최소성... 걍 제일 간단하게 해라!

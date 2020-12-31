@@ -1,0 +1,4815 @@
+2020-11-16-01)사용자 생성
+ - create 명령으로 사용자 생성
+ - grant 명령으로 권한 부여
+ - developer에 등록
+ **기호
+ '[ ]' : 생략 가능
+ '|' : 선택사용
+ ',...' : 반복될 수 있음
+1. create 명령
+  - 오라클 개체(table, user, index, etc)를 생성시킴
+  (사용형식)
+  create user 계정명 identified by 암호;
+  create user Gil identified by java;
+
+2. 권한부여
+grant 권한명,... to 계정명;
+grant connect, resource, dba to Gil;
+
+2020-11-16-02)
+    '대한민국' -> 문자열 ""x
+    '' -> white space(NULL)
+    ASCII
+    'A' -> 65
+
+2020-11-17-01) SQL (structured query )
+
+- 오라클 데이터베이스의 기본 객체인 테이블 생성
+- create table 명령 제공
+(사용형식)
+create table 테이블명(
+    컬럼명1 타입명[(크기[BYTE|CHAR])] [Not Null] [default 값],
+    컬럼명2 타입명[(크기[BYTE|CHAR])] [Not Null] [default 값],
+    
+    컬럼명n 타입명[(크기[BYTE|CHAR])] [Not Null] [default 값],
+    [Constraint 기본키설정명 primary key(칼럼명1[,컬럼명2,...]),]
+    [Constraint 외래키설정명 primary key(칼럼명1[,컬럼명2,...])
+        references 테이블명(컬럼명1[,컬렴명2,...])];
+    기본키설정명 : 해당테이블 스페이스에서 유일한 명칭이어야 함
+    외래키설정명 : 해당테이블 스페이스에서 유일한 명칭이어야 함.
+    '테이블명(컬럼명1)' : 외래키가 참조하는 원본 테이블 이름이고,
+        '(컬럼명1)'은 원본테이블에서 사용
+    
+    
+    예) 한국건설 물리 erd를 기초로 테이블을 생성하시오.
+    (1) EMP 테이블 생성
+    create table EMP(
+        emp_id char(5), 
+        emp_name varchar2(30) not null,
+        addr varchar2(80),
+        tel_no varchar2(20),
+        job_grade varchar2(50),
+        dept_name varchar2(50),
+        
+        constraint pk_emp primary key(emp_id)
+    );
+    (2)site 테이블 생성
+    create table site(
+        site_no char(8), --기본키
+        site_name varchar2(50) not null,
+        site_tel_no varchar2(20),
+        cons_amt number(12) default 0,
+        input_per number(4),
+        start_date date default sysdate,
+        p_com_date date,
+        com_date date,
+        remarks varchar2(100),
+        
+        constraint pk_site primary key(site_no)
+    );
+    
+    (3) MATERIALS 테이블 생성
+    create table materials(
+        mat_id char(10),
+        mat_name varchar2(50) not null,
+        mat_qty number(4) default 0,
+        mat_price number(8) default 0,
+        pur_date date,
+        site_no char(8),
+        
+        constraint pk_materials primary key(mat_id),
+        constraint fk_mat_site foreign key(site_no)
+            references site(site_no)
+    );
+    site의 input_per 디폴트 0 주기
+    alter table site
+    modify(input_per number(4) default 0);
+    
+    (4)WORK 테이블 생성
+    create table work(
+        emp_id char(5),
+        site_no char(8),
+        wst_date date,
+        
+        constraint pk_work primary key(emp_id, site_no),
+        constraint fk_work_emp foreign key(emp_id)
+            references emp(emp_id),
+        constraint fk_work_site foreign key(site_no)
+            references site(site_no)
+    );
+)
+commit;
+select to_char(sysdate,'YYYY-MM-DD HH24:MI:SS') from dual;
+
+2020-11-18-01) insert 문
+ - 테이블에 자료를 삽입할 때 사용
+ (사용형식) 
+ insert into 테이블명([컬럼명1, 컬럼명2,...)]
+    values(값1,값2,...);
+    .'컬럼명1, 컬럼명2,...' : 은 생략할 수 있음
+        생략하는 경우 테이블에 존재하는 모든 컬럼의 갯수와 순서 및 데이터 타입에
+        맞게 자료를 values절에 기술해야함
+    .'컬럼명1, 컬럼명2,...'을 사용하는 경우는 선택된 컬럼ㅁ에 자룔를 삽입하고자
+        하는 경우 기술하며, values절에 기술된 값과 컬럼명은 1:1로 대응 되어야 함
+    .'컬럼명1, 컬럼명2,...' 기술시 not null 컬럼은 생략 될 수 없음.
+    
+예)다음 자료를 emp테이블에 저장하시오.
+[자료]
+사원 id : c1001
+사원명 : 홍길동
+주소 : 대전시 중구 대흥동 500
+부서명 : 총무기획부
+
+사원 id : c1002
+사원명 : 강감찬
+주소 : 서울시 성북구 신장위동 300-10
+직책 : 부장
+부서명 : IT 개발부
+
+사원 id : c1005
+사원명 : 이민정
+주소 : 대전시 대덕구 법동 100
+전화번호 : 010-1234-5678
+직책 : 과장
+부서명 : 자금부
+
+insert into emp(emp_id, emp_name, addr, dept_name) 
+    values ('c1001', '홍길동', '대전시 중구 대흥동500', '총무기획부');
+insert into emp
+    values ('c1002', '강감찬', '서울시 성북구 신장위동 300-10', null, '부장', 'IT 개발부'); --null or ''
+insert into emp
+    values ('c1005', '이민정', '대전시 대덕수 법동 100', '010-1234-5678', '부장', '자금부');
+
+delete emp;
+rollback;
+select * from emp;
+commit;
+
+2. update 문
+- 저장되어 있는 자료(컬럼의 값)를 수정할 때 사용
+(사용형식)
+update 테이블명
+    set 컬럼명 = 값 [,컬럼명 = 값,...]
+    [where 조건];    --primary key롤 찾는게 좋다!
+    .'컬럼명' : 변경할 자료의 컬럼명
+    .'where'절이 생략되면 모든 자료의 해당 컬럼 값을 수정 
+    
+예)'홍길동' 사원의 전화번호를 '042-222-8282'로 수정하시오.
+update emp 
+    set tel_no = '042-222-8282'
+    where emp_id = 'c1001';
+
+예)'강감찬' 사원의 전화번호를 '010-9876-1234'로, 직위를 '차장'으로 수정하시오.
+update emp
+    set tel_no = '010-9876-1234', job_grade = '차장'
+    where emp_name = '강감찬';
+
+commit;
+select * from emp;
+rollback;
+select emp_name, emp_id from emp;
+
+
+문제] 다음 조건에 맞도록 work테이블 등에 자료를 삼입.
+    [처리조건]
+    사원번호  'c1001'인 홍길동 사원이 오늘 날짜로 'dae00001'사업장에
+    발령 받아 출근함.
+    'dae00001'사업장은 '대전 상수도 관리사업'으로 오늘부터 공사가
+    개시되고 2021년 6월 30일에 완공을 목표로 하는 사업장이다.
+
+select * from site;
+insert into work 
+    values ('c1001', 'dae00001', sysdate);
+
+insert into site (SITE_NO, SITE_NAME, p_com_date)
+    values ('dae00001','대전 상수도 관리사업', '20210630');
+
+delete emp                          -- 안지워짐-> 끌어당겨쓰고있음.
+    where emp_name = '홍길동'; 
+
+delete table emp;                   -- 안지워짐-> 끌어당겨쓰고있음.
+
+3. delete 문
+    - 테이블에 저장된 자료를 삭제할 때 사용
+    - 관계가 설정된 테이블에서 부모테이블의 행 중 참조되고 있는 자료는 삭제 거절
+    (사용형식)
+    -rollback의 대상
+    
+delete 테이블명
+[where 조건];
+delete work;
+delete emp;
+
+rollback;
+select * from work;
+select * from emp;
+select * from site;
+drop table emp;
+
+4. drop 문
+    - 오라클 객체를 삭제
+    - rollback의 대상이 아님
+    (사용형식)
+    
+drop 객체타입 객체명;
+
+예)emp 테이블과 work 테이블 사이에 존재하는관계를 삭제하시오.
+alter table work
+    drop constraint fk_work_emp;
+
+alter table work
+    drop constraint fk_work_site;
+    
+drop table emp;
+drop table site; -- materials가 자식테이블이다.
+drop table materials;
+drop table site;
+drop table work; 
+
+2020-11-18-02)오라클 데이터 타입
+ - 오라클에서 제공하는 데이터 타입은 문자열, 숫자, 날짜, 2진자료형이 있다.
+ 
+    1. 문자열 데이터 타입
+    - ''로 묶인 자료를 문자열 자료라고 함
+    - CHAR, VARCHAR, VARCHAR2, NVARCHAR, NCHAR, LONG, RAW, CLOB 등이 존재
+    
+    1)CHAR
+    . 고정길이 문자열을 취급
+    . 최대 2000BYTE 저장 가능
+    . 기억장소가 남으면 오른쪽에 공백이 삽입
+    . 기억공간보다 큰 데이터는 저장 오류
+    . 한글 한 글자는 3BYTE로 저장됨
+    
+    (사용형식)
+    컬럼명 char(크기[byte|char])
+    .'크기'[byte|char]
+    
+    
+예)
+create table temp01(
+    col1 char(20),
+    col2 char(20 byte),
+    col3 char(20 char)
+    );
+
+insert into temp01(col1, col2, col3)
+    values('대한민국','il postino', '대전광역시 중구 대흥동 500-1번지');
+
+select lengthb(col1), lengthb(col2), lengthb(col3)
+    from temp01;
+    
+select * from temp01;
+
+2)VARCHAR2
+    .가변길이 문자열 처리
+    . 최대 4000byte 처리 가능
+    . 정의된 기억공간에서 데이터의 길이 만큼 사용하고 남는 공간은 시스템에 반납
+    . varchar와 같은 기능(오라클은 varchar2 사용을 권고)
+    (사용형식)
+    컬럼명 varchar2(크기[byte|char])
+    '[byte|char]' : 생략되면 byte로 취급
+    
+예)
+
+create table temp02(
+    col1 varchar2(20),
+    col2 varchar2(20 char)
+    );
+
+insert into temp02
+    values('대전시','대한민국은');
+    
+select * from temp02;
+
+select lengthb(col1), lengthb(col2) from temp02;
+    
+2020-11-19-01)
+3) long 데이터 타입
+- 가변길이 문자열을 저장
+- 최대 2gb 까지 저장가능
+- long타입은 하나의 테이블에서 1개만 사용 가능
+- clob로 대체(기능 업그레이드 중단)
+- select문의 select절, update문의 set절, insert문의 values절에서 사용 가능
+(사용형식)
+컬럼명 long
+
+예)
+create table temp03(
+    col1 long,
+    col2 varchar2(2000)
+    );
+insert into temp03 values('sadaf','asdfad');
+select * from temp03;
+select substr(col2, 2,5) from temp03;
+
+4) clob(character large object) 데이터 타입
+    - 대용량 문자열 자료를 처리하기 위한 데이터 타입
+    - 최대 4gb까지 처리 가능
+    - 가변길이 문자 자료형
+    - 한 테이블에서 사용될 수 있는 clob의 갯수에 제한이 없음
+    - 일부 기능 들은 dbms_lob api의 지원을 받아야 함
+    (사용형식)
+
+create table temp04(
+    col1 clob,
+    col2 clob,
+    col3 clob
+    );
+insert into temp04
+    values('대한민국은 민주 공화국이다', '대전시 중구 대흥동 500 영민빌딩 3층',
+            'Oracle Modling과 SQL'
+    );
+select * from temp04;
+
+select lengthb(col2) from temp04;
+
+select DBMS_LOB.SUBSTR(col1,5,3), --3번째에서 5개를 띄워라. 오른쪽에서 읽어들임
+        DBMS_LOB.GETLENGTH(col2),
+        length(col3)
+    from temp04;
+    
+update temp04
+    set col3 = 'Oracle Modeling과 SQL'
+    
+5) nclob, nvarchar2
+    - 다국어 지원 형태로 문자 자료저장
+    - UTF-8, UTF-16 형식의 encodding 
+    - 나머지 기능은 clob, varchar2와 동일
+
+2. 숫자자료형
+    - 정수와 실수 데이터 저장
+    - number 타입 제공
+    (사용형식)
+    number[(정밀도)*[,스케일])]
+    - 표현할 수 있는 값의 범위 : 1.0e-130 ~ 9.999..9e125
+    - 정밀도 : 전체 자리수(1~38)
+    - 스케일 : 소숫점이하의 자리수
+    ex)number(5,2) : 전체 5자리가 확보(정수 부분 3자리, 소숫점이하 3자리에서
+        반올림하여 2번째 자리까지 표현)
+    - 정밀도 대신 '*'를 사용하면 38자리 이내에서 자동할당
+    ex)number(*,2) : 소수점이하 3자리에서 반올림하여 2번째 자리까지 표현, 단, 정수부분은
+    38자리 이내에서 크기만큼 자동 할당
+    -스케일이 생략되면 0으로 간주
+    
+예)
+입력값                     선언                  저장된 값
+12345678.7896           number              12345678.7896
+12345678.7896           number(*,2)         12345678.79
+12345678.7896           number(8)           12345679
+12345678.7896           number(7,2)         오류
+12345678.7896           number(10,-2)       12345700
+
+    **정밀도 < 스케일 인 경우 --정수가 0이고 소수가 있는 경우. 0.12312312
+    - 정밀도는 0이 아닌 유효숫자의 수
+    - (스케일-정밀도) : 소숫점이하에 존재해야할 0의 갯수
+    - 스케일 : 소숫점 이하의 데이터의 수
+    
+입력값                     선언                  저장된 값
+1.234                   number(4,5)         오류
+0.23                    number(3,5)         오류
+0.0123                  number(3,4)         0.0123
+0.0012345               number(3,5)         0.00123
+0.00125676              number(3,5)         0.00126
+
+3. 날짜자료형
+    - 날짜자료(년,월,시,분,초)를 저장하기 위한 데이터 타입
+    - 기본형은 date, 시간대(timezone)정보와 10억분의 1초단위의 시각정보를
+    - 제공하는 데이터 타입으로 timestamp가 제공
+    1)date 타입
+    - 기본 날짜형
+    - '+', '-' 연산의 대상
+    **sysdate : 시스템이 제공하는 날짜정보를 제공하는 함수
+    (사용형식)
+    컬럼명 date
+
+예)
+create table temp05(
+    col1 date,
+    col2 date,
+    col3 date
+    );
+insert into temp05
+    values(sysdate, '20101029', sysdate+30);
+select * from temp05;
+select col1 - 10 from temp05;
+
+select mod(to_date('20100101')-to_date('00010101')-1,7) from dual;
+
+select * from temp05;
+select to_char(col1,'YYYY"년" MM"월" DD"일" AM HH24:MI:SS') from temp05;
+
+2)timestamp 타입
+    - 시간대 정보와 정교한 시간정보를 필요할 때 사용
+    (사용형식)
+    컬럼명 timestamp - 시간대 정보 없음
+    컬럼명 timestamp with time zone - 시간대정보(대륙명/도시명) 포함
+    컬럼명 timestamp with local time zone 
+            - 서버가 위치한 시간대정보, 보통 timestamp와 동일
+예)
+create table temp06(
+    col1 date,
+    col2 timestamp,
+    col3 timestamp with time zone,
+    col4 timestamp with local time zone
+    );
+insert into temp06
+    values(sysdate,sysdate,sysdate,sysdate);
+select*from temp06;
+    
+
+2020-11-19-02)기타 자료형
+    -2진 자료를 저장하기 위한 자료 타입
+    -blob, raw, long law, bfile 등이 제공
+    1) raw
+    - 상대적으로 작은 용량의 2진 자료를 저장
+    - 인덱스 처리가 가능
+    - oracle에서 해석이나 변환작업을 수행하지 않음
+    - 최대 2000byte까지 처리 가능
+    -16진수와 2진수 저장
+    (사용형식)
+    컬럼명 raw(크기)
+    
+    예)
+    create table temp07(
+        col1 raw(1000),
+        col2 raw(2000)
+        );
+        
+    INSERT INTO temp07
+        VALUES (hextoraw('3De5ff77'),hextoraw('00'));
+    insert into temp07
+        values('00111101111011111111111011110111','00000000');
+select * from temp07;
+
+2)bfile
+    - 이진자료 저장
+    - 대상 이진자료를 데이터베이스 외부에 저장
+    - 경로 정보(directory 객체)정보만 테이블에 저장
+    - 4gb까지 저장 가능
+    (사용형식)
+    컬럼명 bfile
+        .디렉토리 별칭(alias) 설정(30byte)과 파일명(256byte)설정
+    
+    그림파일 저장순서
+    1. 그림파일 저장된 폴더 확인
+    2. 디렉토리 객체 생성 - 그림이 저장된 디렉토리의 절대 주소
+        create directory test_dir as 'D:\A_TeachingMaterial\2.Oracle\other';
+    3. 그림을 저장할 테이블 생성
+        create table temp08(
+            col bfile);
+    4. 그림을 삽입한다.
+        insert into temp08
+            values(bfilename('test_dir', 'SAMPLE.PNG'));
+        select * from temp08;
+        
+    - 이진자료 저장
+    - 대상 이진자료를 데이터베이스 내부에 저장
+    - 4gb까지 저장 가능
+    (사용가능)
+    컬럼명 blob
+    
+    (그림저장순서)
+    1.그림파일 준비(SAMPLE.PNG)
+    2.디렉토리객체 생성(test_dir)
+    3.익명블록생성
+    
+    declare
+    l_dir varchar2(20):='test_dri';
+    l_file varchar2(30):='SAMPLE.PNG';
+    l_bfile bfile;
+    l_blob blob;
+    begin
+    insert into temp08(col1) values(empty_blob())
+        return col1 into l_blob;
+    
+    l_bfile := bfilename(l_dir, l_file);
+    dbms_lob.fileopen(l_bfile, dbms_lob.file_readonly);
+    dbms_lob.loadfromfile(l_blob,l_bfile,dbms_lob.getlength(l_bfile));
+    dbms_lob.fileclose(l_bfile);
+    
+    8-3*2-1+1 = 0
+    
+    end;
+    commit;
+        
+
+2020-11-20-01)연산자와 함수
+select 문
+ - 데이터를 조회하는 명령
+ - SQL 명령 중 가장 많이 사용되는 명령
+ (사용형식)
+ select [distinct]|*|컬럼명 [AS]["]컬럼별칭["],
+        컬럼명 [AS]["]컬럼별칭["],
+        ..
+        컬럼명 [AS]["]컬럼별칭["]
+    from 테이블명
+    [where 조건]
+    [group by 컬럼명[,컬럼명,...]] --~~별
+[having 조건] -- 
+    [order by 컬럼명|컬럼인덱스[asc|desc][,컬럼명|컬럼인덱스[asc|desc],...]; -- 2 적으면 select에 적은 2번째 컬럼을 오름차순으로.
+
+.'[distinct]' : 중복된 자료를 배제할 때 사용
+. '컬럼별칭' : 컬럼에 부여된 또 다른 이름
+    - 컬럼명 as 별칭
+    - 컬럼명   별칭
+    - 컬럼명 "별칭" : 별칭에 특수문자(공백포함)가 포함된 경우 반드시 ""로 묶어 사용
+    - '컬럼인덱스' : select 절에서 기술된 해당 컬럼의 순번(1부터 counting)
+    - 'asc|desc' : 정렬방법(asc:오름차순으로 기본값, desc는 내림차순)
+    - select문의 실행 순서 : form -> where절 이하 -> select절
+    
+1. 연산자
+    - 산술연산자(+,-,*,/)
+    - 관계연산자(>,<,>=,<=,=,!=(<>))
+    - 논리연산자(and,or,not)
+
+2. 함수(function)
+    - 특정 기능을 수행하여 하나의 결과를 반환하도록 설계된 모듈
+    - 컴파일되어 실행 가능한 상태로 제공
+    - 문자열, 숫자, 변환, 집계함수의 형태로 제공
+    
+1)문자열 함수
+    - 문자열 조작한 결과를 반환
+    ** 문자열 연산자 '||'
+    자바의 문자열 연산자 '+'와 같이 두 문자열을 결합하여 하나의 문자열을 반환
+    (사용형식)
+    
+예) 회원테이블에서 여성회원들의 정보를 조회하시오.
+    Alias는 회원번호, 회원명, 주소, 마일리지
+select mem_id 회원번호, mem_name 회원명, mem_add1||' '||mem_add2 주소, mem_mileage 마일리지
+    from member
+    where substr(mem_regno2, 1,1)='2' or substr(mem_regno2, 1,1)='4'
+    order by 4 desc;
+    
+    
+1)concat(c1, c2)
+    - c1과 c2를 결합하여 결과를 반환
+
+    select 'my name is ' || mem_name
+        from member;
+    select concat('my name is ', mem_name)
+        from member;
+    
+예) 회원테이블에서 회원번호, 회원명, 주민번호를 조회하시오
+    단, 주민번호는 'xxxxxx-xxxxxxx'형식으로 출력하시오
+    select mem_id 회원번호, mem_name 회원명, concat(concat(mem_regno1,'-'), mem_regno2) 주민번호
+        from member;
+    select mem_id 회원번호, mem_name 회원명, mem_regno1||'-'||mem_regno2 주민번호
+        from member;
+예)
+select 'oracle' ||', '|| 'Modeling' From dual;
+
+예) 회원테이블에서 회원번호, 회원명, 주민번호를 조회하시오
+    단, 주민번호는 'xxxxxx-xxxxxxx'형식으로 출력하시오
+    
+select mem_id 회원번호,
+        mem_name 회원명,
+        mem_regno1 || '-' || mem_regno2 주민번호
+    from member
+    order by 2;
+    
+    
+    
+2)initcap
+ - 단어의 선두문자만 대문자로 출력
+ - 보통 이름 출력 시 사용
+ (사용형식)
+ initcap(c1)
+select initcap(job_title)
+    from jobs;
+commit;    
+
+update employees
+    set emp_name = lower(emp_name);
+select emp_name 
+    from employees;
+
+update employees
+    set emp_name = initcap(emp_name);
+select emp_name 
+    from employees;
+rollback;
+    
+예) 회원테이블에서 회원번호와 회원명을 조회하시오.
+select mem_id as "회원번호",
+        mem_name as "회원이름"
+        from member;
+        
+select mem_id "   회원번호",
+        mem_name 회원이름
+        from member;
+    
+select * --column(열?)
+    from lprod; -- table
+       -- where --raw(행?)
+select mem_id, mem_name, mem_bir, mem_mileage
+    from member
+    order by 2;--
+select prod_id 상품코드, prod_name 상품명, prod_sale * 55 상품가격   
+    from prod;
+select lprod_id "id", lprod_nm "제품"
+    from lprod;
+select *
+    from lprod
+    where lprod_nm = '여성캐주얼';
+    
+2020-11-23-01)연산자
+    4. 기타연산자
+     1)in 연산자
+        - 질의 탐색을 위해 2개 이상의 표현식(항목)을 지정
+        - or 연산자로 변환 가능
+        (사용형식)
+        컬럼명 in(표현식1, 표현식2,...)
+        .'컬럼명'에 저장된 값이( )안에 기술된 표현식 중 어느 하나와 일치하면 전체조건이 참
+    예)사원테이블에서 부서코드가 20, 60, 80번 부서에 속한 사원을 검색하시오.
+        Alias는 사원번호, 사원명, 부서콛, 급여
+        
+    (in 연산자를 사용하지 않는 경우)
+    select employee_id as 사원번호,
+            emp_name as 사원명,
+            department_id as 부서코드,
+            salary as 급여
+        from employees
+        where department_id=20 or department_id = 60 or department_id =80
+        order by department_id asc
+    
+    (in 연산자를 사용하는 경우)
+    select employee_id as 사원번호,
+            emp_name as 사원명,
+            department_id as 부서코드,
+            salary as 급여
+        from employees
+        where department_id in(20,60,80)
+        order by 3;
+        
+    2)some, any 연산자
+    - 기본 기능은 in 연산자와 동일
+    (사용형식)
+    컬럼명 관계연산자 any|some (표현식1, 표현식2,...)
+    .in 연산자는 동일성만 판단(=any, some)
+    .any, some은 크기 비교도 가능
+    select employee_id as 사원번호,
+            emp_name as 사원명,
+            department_id as 부서코드,
+            salary as 급여
+        from employees
+        where department_id = some (20,60,80)
+        order by 3;
+    
+    예)회원테이블에서 직업이 공무원인 회원이 가진 마일리지보다 더 많은 마일리지를 보유한 회원을 조회하시오.
+    select mem_id as 사원번호,
+            mem_name as 사원명,
+            mem_mileage as 마일리지,
+            mem_job as 직업
+        from member
+        where mem_job = '공무원' 
+        order by mem_mileage desc;
+        
+    select mem_id as 사원번호,
+            mem_name as 사원명,
+            mem_mileage as 마일리지,
+            mem_job as 직업
+        from member
+        where mem_mileage > any (select mem_mileage
+                                from member 
+                                where mem_job = '공무원');
+    
+    select mem_id as 사원번호,
+            mem_name as 사원명,
+            mem_mileage as 마일리지,
+            mem_job as 직업
+        from member
+        where mem_mileage > any (select max(mem_mileage) -- 가장 큰 값! 3200 이상만을 나오게 하려면
+                                from member 
+                                where mem_job = '공무원');
+    
+    문제] 사원테이블에서 부서번호가 30,50,80 부서에 속하지 않은 사원을 조회하시오
+        select employee_id as 사원번호,
+                emp_name as 사원명,
+                department_id as 부서번호,
+                hire_date as 입사일
+            from employees
+            where department_id not in (30, 50, 80); 
+            --where not department_id =any((some))(30,50,80);
+            --
+                
+    문제] 회원테이블에서 다음자료의 주민번호를 수정하시오
+        회원번호 : 'e001', 주민번호 : '750501-2406017' => '010501-4406017'
+        회원번호 : 'n001', 주민번호 : '750323-1011014' => '000323-3011014'
+        select * from member;
+        select mem_id as 회원번호,
+                mem_regno1 || '-' || mem_regno2 as 주민번호
+            from member;
+            commit;
+        update member
+            set mem_regno1 = '010501',
+                mem_regno2 = '4406017'
+            where mem_id = 'e001';
+        select mem_id as 회원번호, mem_regno1 || '-' || mem_regno2
+            from member
+            where mem_id = 'e001'or
+                mem_id = 'n001';
+            
+        update member
+            set mem_regno1 = '000323',
+                mem_regno2 = '3011014'
+            where mem_id = 'n001';
+            
+    문제]회원테이블에서 여성회원이고 마일리지가 3000이상인 회원정보를 조회하시오.
+        select * from member;
+        select mem_id as 회원번호, mem_name as 회원명, mem_regno1 || '-' || mem_regno2 as 주민번호,
+                 mem_job as 직업, mem_mileage as 마일리지
+            from member
+            where substr(mem_regno2, 1, 1) in (2,4) and mem_mileage >= 3000;
+    
+    문제]상품테이블(prod)에서 분류코드가 'P102'이고 판매가격(prod_price)이 10만원 이상인 상품을 조회하시오
+    select prod_lgu
+            from prod
+            where prod_lgu = 'P101';
+            
+    select prod_id as 상품번호,
+            prod_name as 상품명,
+            prod_lgu as 분류코드,
+            prod_price as 판매가격
+        from prod
+        where prod_lgu = 'P102' and prod_price >= 100000;
+        
+    문제] 장바구니테이블에서 2005년 7월 1일 ~ 7월 15일 판매정보를 조회하시오. 단, 구매수량이 많은것 부터 출력
+    select * from cart;
+    select * 
+        from cart
+        where substr(cart_no,1,8) between ('20050701') and ('20050715')
+        order by cart_qty desc;
+    
+    예) 사원테이블에서 사원의  근속년수를 구하고 근속년수가 15년 이상인 회원들에게 보너스를 지급하려한다.
+        보너스 : 급여의 15%, 지급액 : 급여 + 보너스
+        select * from employees;
+        select employee_id as 사원번호, 
+                emp_name as 사원명, 
+                hire_date as 입사일,
+                --년도 뽑기. extract(month fromsysdate) 월 뽑기
+                extract(year from sysdate) - extract(year from hire_date) as 근속년수,
+                salary *0.15 as 보너스, 
+                salary as 급여,
+                (salary * 0.15) + salary as 지급액
+            from employees
+            where extract(year from sysdate) - extract(year from hire_date) >= 15;
+        
+    예) 회원테이블에서 회원들의 나이를 주민번호를 기준으로 계산하시오.
+    select * from member;
+--    select mem_id as 아이디, mem_name as 이름, mem_regno1 || '-' || mem_regno2 주민번호,
+--            '120'-substr(mem_regno1,1,2) as 나이
+    select '19'||substr(mem_regno1,1,2),
+            extract(year from sysdate)-(1900+to_number(substr(mem_regno1,1,2)))
+        from member;
+    select mem_id 회원번호,
+            mem_name as 회원명,
+            mem_regno1||'-'||mem_regno2 as 주민번호,
+            case when substr(mem_regno2,1,1)='1' or substr(mem_regno2,1,1)='2' then
+                    extract(year from sysdate) -(1900+to_number(substr(mem_regno1,1,2)))
+                else extract(year from sysdate) - (2000 + to_number(substr(mem_regno1,1,2)))
+                end as 나이
+            from member;
+            
+    예제) 매입테이블(buyprod)에서 2005년 1월 매입자료를 조회하시오
+    select * from buyprod;
+    select buy_date 매입일, buy_prod "매입상품 코드", buy_qty 매입수량, buy_cost 매입단가, buy_qty * buy_cost 매입가, extract(month from buy_date)
+        from buyprod
+        --where buy_date >= '20050101' and buy_date <= '20050131';
+        where extract(year from buy_date) = 2005 and extract(month from buy_date) = 1;
+        
+2020-11-23-02)between
+3) All 연산자
+- 질의 탐색으 ㄹ위해 2개 이상의 표현식(항목)을 지정
+- 모든 표현식의 평가 결과가 참이어야 where 절이 참이되는 연산자
+  (거의 사용되는 경우가 없음)
+- and 연산자로 변환 가능
+
+2020-11-23-02)between
+3) All 연산자
+- 질의 탐색을 위해 2개 이상의 표현식(항목)을 지정
+- 모든 표현식의 평가 결과가 참이어야 where 절이 참이되는 연산자
+  (거의 사용되는 경우가 없음)
+- and 연산자로 변환 가능
+컬럼명 all (표현식1, 표현식2,...)
+
+4)exists 연산자
+ - 반드시 뒤에 서브쿼리가 나와야함
+ (사용형식)
+ where exists(서브쿼리)
+ 
+ 예) 사원테이블에서 전체 사원의 평균급여보다 많은 급여를 수령하는
+    사원이 근무하는 부서코드를 조회하시오.
+    select *from employees;
+    --평균급여
+    select round(avg(salary)) from employees; 
+    select department_id, salary
+        from employees
+        where salary >= (select avg(salary) from employees);
+--        where salary >= avg(salary); XXXXX
+        where exists (select 1
+                            from employees
+                            where salary > (select round(avg(salary))
+                                                from employees))
+    order by 1;
+    
+    5) between 연산자
+        - 범위를 지정하여 조건을 구성하는 경우 사용
+        (사용형식)
+        컬럼명 between 값1 and 값2
+        . 컬럼명의 값이 '값1'에서 '값2'사이의 값이면 참(true)을 반환
+        
+예) 회원테이블에서 마일리지가 1000 ~ 3000 사이인 회원정보를 조회하시오
+    alias는 회원번호, 회원명, 마일리지
+(and 연산자 사용)
+select mem_id 회원번호, 
+        mem_name 회원명, 
+        mem_mileage 마일리지
+    from member
+    --where mem_mileage >= 1000 and mem_mileage <= 3000;
+    where mem_mileage between 1000 and 3000;
+        
+예제) 장바구니테이블에서 'a001'회원부터 'd001'회원까지 구매정보를 조회하시오
+select * from cart;
+select cart_member 회원번호, cart_no 상품코드, cart_qty 구매수량
+        from cart
+        where cart_member between 'a001' and 'd001'
+--        where cart_member >= 'a001' and cart_member <='d001'
+        order by 3 desc;
+        
+6) LIKE 연산자 --****문자열에 사용****
+    - 패턴을 비교하는 경우 사용하는 연산자
+    - 와일드카드(패턴문자열)로 '%'와 '_'가 사용
+    -'%' : '%'가 사용된 위치에서 그 이후에 나오는 모든 문자열과 대응
+        ex) '김%' : '김'으로 시작하는 모든 문자열과 대응
+            '%김' : '김'으로 끝나는 모든 문자열과 대응
+            '%김%' : 단어 내부에 '김'이 존재하는 모든 문자열과 대응
+    -'_' : '_'가 사용된 위치에서 하나의 문자와 대응
+        ex) '김_' : '김'으로 시작하고 2글자로 구성되며 두번째 글자는 어느글자든 상관없음
+            '_김' : '김'으로 끝나는 2글자로 구성된 문자열과 대응
+select *from member;
+select mem_name 이름
+    from member
+    where mem_name like '%이%';
+
+예) 회원테이블에서 회원의 거주지가 '충남'인 회원정보를 출력하시오
+select * from member;
+select mem_name 회원이름, mem_add1 || '-' || mem_add2 주소, mem_job 직업
+    from member
+    where mem_add1 like '충남%';
+    
+2020-11-24-01)
+3) upper, lower 
+    -주어진 문자열에 포함된 글자를 대문자(upper) 또는 소문자(lower)로
+    변환하여 반환
+    (사용형식)
+    UPPER(c), lower(c)
+예)회원테이블에서 'R001'회원 정보를 조회하시오
+    select * from member;
+    select mem_id 회원번호, mem_name 회원명, mem_job 직업, mem_mileage 마일리지
+        from member
+        where upper(mem_id) = ('R001');
+     -- where mem_id = lower('R001');
+예) 분류테이블에서 'P200'번의 대의 분류코드를 조회하시오
+    select * from lprod;
+    select lprod_gu 분류코드, lprod_nm 분류명
+        from lprod
+        where upper(lprod_gu) like 'P20%';
+        
+        
+4) ascii, chr
+    - ascii : 주어진 문자자료를 ascii 코드값으로 변환
+    - chr : 주어진 숫자(정수, 1~65535)에 대응하는 문자 반환
+예)
+    select ascii('Oracle'),
+            ascii('대한민국'),
+            chr(95)
+        from dual;
+        
+        
+5) lpad, rpad
+    - 특정문자열(패턴)을 사입할 때 사용
+    (사용형식)
+    lpad(c, n [,pattern]), rpad(c, n [,pattern])
+    - 주어진 문자열 'c'를 길이 'n'의 기억공간에 왼쪽부터 채우고(rpad) |
+        오른쪽부터 채우고(lpad) 남는 공간은 'parttern'으로 정의된 문자열을 채움
+    - 'pattern'이 생략되면 공백으로 채워짐.
+예)회원테이블에서 회원의 암호를 10 자리공간에 우측정렬하고 남는 공간에 '#'를 삽입하시오
+    select * from member;
+    select mem_id 회원번호,
+            mem_name 회원명,
+            mem_pass 암호, 
+            lpad(mem_pass, 10, '#') 암호2
+        from member;
+예) 매입테이블에서 2005년 2월 매입현황을 조회하시오. 단, 매입단가는 9자리에 출력하되 남은 왼쪽 공간에 '*'를 삽입하여 출력
+    select * from buyprod;
+    select buy_date 날짜, buy_prod 매입상품코드, buy_qty 수량,
+            lpad(buy_cost,9,'*') 단가
+        from buyprod
+--        where extract(year from buy_date) = 2005 and extract(month from buy_date) = 2;
+        where buy_date between '20050201' and '20050228';
+        
+        
+6) ltrim, rtrim, trim
+    - 주어진 분자열에서 왼쪽(ltrim) 또는 오른쪽(rtrim)에 존재하는 문자열을
+        찾아 삭제할 때 사용
+    - 양쪽에 존재하는 공백을 제거할때는 trim 사용
+    (사용형식)
+    ltrim(c1 [, c2]), rtrim(c1 [, c2]), trim(c1)
+    -c2가 생략되면 공백을 삭제
+
+예) 사원테이블의 사원명 컬럼의 데이터 타입을 char(80) 으로 변경하시오
+alter table employees
+    modify emp_name char(80);
+예) 사원테이블에서 'Steven King' 사원정보를 조회하시오
+    select * from employees;
+    select employee_id 사원번호, trim(emp_name) 사원명, department_id 부서코드, hire_date 입사일
+        from employees
+        where trim(emp_name)='Steven King';
+예) 상품테이블에서 '대우'로 시작하는 상품명중 '대우'를 삭제하고 출력하시오
+    select * from prod;
+    select prod_id 상품코드, prod_name 상품명1, ltrim(prod_name, '대우 ') 상품명2, prod_lgu 분류코드, prod_buyer 거래처코드
+        from prod
+        where prod_name like '대우%';
+
+
+7) substr(c, n1[, n2])
+    - 주어진 문자열에서 n1에서 시작하여 n2(갯수)만큼(총 문자갯수)의 부분 문자열을 추출하여 반환
+    - n2가 생략되면 n1 이후의 모든 문자열을 추출하여 반환
+    - n1가 음수이면 뒤에서 부터 처리됨
+    - n1은 1부터 counting
+
+예)
+    select substr('IL postino', 3,4),
+            substr('ILpostino', 3,4),
+            substr('IL postino', 3),
+            substr('IL postino', -3,2)
+        from dual;
+예) 상품테이블에서 분류코드'P201'에 속한 상품의 사지수를 출력하시오
+    select * from prod;
+    select count(*) "상품의 수"
+        from prod
+        where upper(substr(prod_id, 1, 4)) = 'P201';
+예) 장바구니테이블에서 2005년 3월에 판매된 상품정보를 상품별로 출력하시오
+    select *from cart;
+    select a.cart_prod 상품코드,
+            b.prod_name 상품명,
+            nvl(sum(a.cart_qty),0) 수량합계,
+            nvl(sum(a.cart_qty* b.prod_price),0) 판매금액
+        from cart a, prod b
+        where substr(cart_no,1,6) = '200507' -- cart_no like '200503%'
+            and a.cart_prod = b.prod_id
+        group by a.cart_prod, b.prod_name
+        order by 1;
+예제) 회원테이블에서 '대전'에 살고있는 회원정보를 조회하시오 단, like연산자를 사용하지 말것
+    select * from member;
+    select mem_id 회원번호, mem_name 회원명, mem_add1 || '-' || mem_add2 주소, mem_job 직업, mem_mileage 마일리지
+        from member
+        where substr(mem_add1, 1, 2) = '대전';
+        
+예제) 오늘이 2005년 7월 28일이라고 가정하고 cart_no를 자동으로 생성하는 코드를 작성하시오.
+--    1. 2005년 7월 28일 최대 순번 max
+        select to_number(max(substr(cart_no,9))+1)
+        from cart
+        where substr(cart_no,1,8)= '20050728';
+--    2. 날짜와 1번에서 구한 순번을 결합
+        select to_char(sysdate,'YYYYMMDD')||
+                trim(to_char(to_number(max(substr(cart_no,9))+1),'00000'))
+            from cart
+            where substr(cart_no,1,8)='20050728';
+    
+    select max(cart_no)+1
+        from cart
+        where substr(cart_no,1,8) = '20050728';
+
+예제) 분류테이블에서 '여성정장' 분류코드를 신규로 등록시킬때 'P200'번대의 코드를 생성하시오.
+    select * from prod;
+    --max함수 숫자일 때만 전체의 수를 구할 수 있음.
+    select 'P'||(max(substr(lprod_gu,2))+1)
+        from lprod
+        where lprod_gu like 'P2%';
+        
+8) replace(c1, c2[, c3]) -- 'sad    adfas' 안의 공백 없앨때
+    - 주어진 문자열 c1에서 c2를 c3로 대치(치환) 시킴
+    - c3가 생략되면 c2를 제거함
+    
+예)상품테이블에서 상품명 중 '대우'를 찾아 'Apple'로 변경하시오
+    select * from prod;
+    select prod_name 상품명,replace(prod_name, '대우', 'Apple') 변경된상품명
+        from prod
+        where prod_name like '%대우%';
+
+    select prod_id,
+            prod_name,
+        replace(prod_name,' ')
+        from prod
+        where prod_name like '%대우%';
+
+9) length(c), lengthb(c)
+    - 주어진 문자열에서 글자수(length) 또는 기억공간의 크기(byte수, lengthb)를 반환
+    
+2020-11-25 01) 숫자함수
+1. 수학적 함수
+    -abs(n) : n의 절대값 반환
+    -sign(n) : n의 부호에 따라 0인경우 0, 양수라면 1, 음수라면 -1을 반환 --양소인지 음수인지 판별하는 함수
+    -sqrt(n) : n의 평방근(root)
+    -power(n1, n2) : n1의 n2승 값을 반환
+    
+예) 상품테이블에서 상품의 매입단가와 할인판매단가를 비교하여 이익 정도를 나타낼 수 있도록 조회하시오
+    *이익여부는 이익이 발생되면 '정상' 이익이 없으면 '원가판매상품' 손해가 발생되면 '재고처분상품'이라고 출력하시오.
+    
+    update prod
+        set prod_sale = prod_cost
+        where prod_id like 'P101%';
+    
+    update prod
+        set prod_sale = prod_cost
+        where prod_id like 'P102%';
+    
+    select prod_id 상품코드, prod_name 상품명, prod_cost 매입단가, prod_sale 할인판매가,
+            case when sign(prod_sale - prod_cost) = 1 then '정상제품'
+                when sign(prod_sale - prod_cost) = 0 then '원가판매상품'
+            else '재고처분상품' end 비고
+        from prod;
+    
+    **표현식 (case when then ~ end)
+    - 조건을 판단하여 처리할 명령을 다르게 선택할 때 사용(IF문과 비슷한 기능)
+    - select 절에서 사용
+    (사용형식)
+    case when 조건1 then 명령1
+        when 조건2 then 명령 2
+            ....
+    else 명령n end
+
+예)회원테이블에서 주민번호를 이용하여 성별을 구분하시오. 단, 대전지역에 거주하는 회원번호만을 조회하시오
+    select * from member;
+    select mem_id 회원번호, mem_name 회원명, mem_add1||'-'||mem_add2 주소, 
+            case when substr(mem_regno2,1,1) ='2' or substr(mem_regno2,1,1) ='4' then '여성회원' 
+                when substr(mem_regno2,1,1) ='1' or substr(mem_regno2,1,1) ='3' then '남성회원'
+                else '오류' end 성별
+    from member
+    where mem_add1 like '대전%';
+
+
+2. greatest(n1,n2[,n3,...]), least(n1,n2[,n3,...])
+    - greatest: 주어진 수 n1,n2[,n3,...] 중 제일 큰 수를 반환
+    - least : 주어진 수 n1, n2[,n3,...] 중 제일 작은 수를 반환
+    
+예) select greatest(20,-15,70), least('오성님', '오성순', '정은실')
+     from dual;
+    
+예) 회원테이블에서 마일리지가 1000미만인 회원들의 마일리지를 1000으로 부여하려고 한다. 이를 구현하시오(greatest) 사용
+     select * from member;
+     select mem_id 회원번호, mem_name 회원명, mem_mileage 마일리지, greatest(mem_mileage, 1000) 마일리지1
+        from member
+        where mem_mileage <=1000;
+        
+3. round(n[,L]), trunc(n,[,L])
+    - round : 주어진 자료 n을 L+1번째 자리에서 반올림하여 L자리까지 표현
+    - trunc : 주어진 자료 n을 L+1번째 자리에서 자리버림하여 L자리까지 표현
+    - 1이 음수이면 정수부분 1자리에서 반올림(round), 자리버림(trunc)
+    - 1이 생략하면 0으로 간주
+    
+예)사원테이블에서 각 부서별 평균임금을 조회하시오
+    평균임금은 소수 2자리까지 출력하시오
+    select * from employees; 
+    
+    alter table
+    modify emp_name varchar2(80);
+    
+    update employees
+        set emp_name=trim(emp_name);
+        
+    select a.department_id 부서코드, b.department_name 부서명,
+            to_char((round(avg(a.salary),2)),'99,999.99') 평균임금
+        from employees a, departments b
+        where a.department_id = b.department_id
+        group by a.department_id, b.department_name
+        order by 1;
+        
+예) 사원테이블을 이용하여 사원들의 이번달 급여를 지급하려한다.
+    지급액은 보너스+급여-세금이고 보너스는 영엽실적(commission_pct)*급여이다.
+    또 세금은 보너스+급여의 3%이다. 소수 첫자리까지 나타내시오.;
+    select * from employees;
+    
+    select employee_id 사원번호, emp_name 사원명, department_id 부서코드, 
+           salary 급여, 
+           nvl(commission_pct*salary,0) 보너스, 
+           to_char(trunc(((salary +nvl(salary*commission_pct,0))*0.03),1),'99,999.9') 세금, 
+           to_char(trunc((salary+nvl(salary*commission_pct,0)-((salary +nvl(salary*commission_pct,0))*0.03)),1),'99,999.9' )지급액
+        from employees;
+
+
+    
+    2020-11-25-02)
+4.mod(n,c), remainder(n,c)
+    - n을 c로 나눈 나머지
+    - 내부에서 서로 다른 함수를 사용하여 나머지를 구함
+    mod : n -c * floor(n/c)
+    remainder : n - c* round(n/c)
+        ** floor(n) : n과 같거나 작은쪽에서 제일 큰 정수(n을 초과하지 않는 최대 정수)
+        select mod(11,3), remainder(11,3) from dual;
+    mod(10,3) : 10 - 3 * floor(10/3)
+                10 - 3 * floor(3.33333)
+                10 - 3*3 => 10-9 =>1
+    remainder(10,3) : 10 - 3 * round(10/3)
+                    10 - 3 * round(3.33333)
+                    10 - 3 *3 => 10-9 =>1
+                    
+    mod(11,3) : 11 - 3 * floor(11/3)
+                11 - 3 * floor(3.33333)
+                11 - 3*3 => 11-9 =>2
+    remainder(11,3) : 10 - 3 * round(10/6)
+                     10 - 3 * round(3.666666)
+                     10 - 3 *4 => 11-12 =>-1
+                     
+5. floor(n), ceil(n)
+    -floor : n을 초과하지 않는 최대정수
+    -ceil : n과 같거나 n보다 큰 제일 작은 정수 --올림
+            .소수점이 허용되지 않는 컬럼에 정수 데이터가 입력 된 경우 소수점을 무조건 반올림하여
+            정수자료만 저장하는 경우 주로 사용(급여, 세금 등의 계산 항목에 주로 사용)
+예)
+select floor(-10), floor(-10.234), ceil(-10), ceil(-10.001) from dual;
+select floor(-10), floor(-10.234), ceil(10), ceil(10.001) from dual;
+
+6. width_bucket(n, min, max,b)
+    - min과 max 사이를 b개의 구간으로 나누었을 경우 주어진 수 n이 어느 구간에 속하는지를 반환
+    select width_bucket(90, 1, 100, 10) from dual;
+예) 회원테이블에서 회원들이 보유한 마일리지를 1~10000사이를 10개 구간으로 나누고 각 회원이 속한 구간 값을 조회하시오.
+    select mem_id 회원번호, mem_name 회원명, mem_mileage 마일리지,
+            width_bucket(mem_mileage, 1, 10000, 10) 구간값,
+            width_bucket(mem_mileage, 10000, 1, 10) 등급
+        from member;
+
+예) 사원테이블에서 급여를 2000 ~ 30000을 3개의 구간으로 나누고 그 구간값이 1인경우
+    '낮은급여', 2인 경우 '중간급여', 3인경우 '고 임금' 이라는 메세지를 비고란에 출력하시오
+    select * from employees;
+    select employee_id 사원번호, emp_name 사원명, department_id 부서코드, salary 급여, 
+            width_bucket(salary, 2000, 30000, 3) 구간값,
+            case when width_bucket(salary, 2000, 30000, 3) = 3 then '고임금'
+                when width_bucket(salary, 2000, 30000, 3) = 2 then '중임금'
+                else '저임금' end 비고
+        from employees;
+    
+예) 사원테이블에서 급여를 2000 ~ 30000을 3개의 구간으로 나누고 그 구간값이 1인경우
+    '낮은급여', 2인 경우 '중간급여', 3인경우 '고 임금' 이라는 메세지를 비고란에 출력하시오.
+    select* from employees;
+    select employee_id 사원번호, emp_name 사원명, department_id 부서코드, salary 급여, 
+            width_bucket(salary, 2000, 30000, 3) 구간값,
+            case when width_bucket(salary, 2000, 30000, 3)=1 then '낮은 급여'
+                when width_bucket(salary, 2000, 30000, 3)=2 then '중간 급여'
+            else '고 임금' end 비고
+        from employees; 
+            
+2020-11-26-01) 날짜형 함수
+
+1. sysdate
+ - 시스템이 제공하는 기본 날짜형
+ - 년, 월, 일, 시, 분, 초 정보제공
+ - '+'와 '-' 연산의 대상
+ 
+ 예);-- 일수 -- 계산하기
+ select sysdate, sysdate +10, sysdate-200 from dual;
+ 
+ 2. add_months(d,n) -- 월수 -- 계산하기
+    - 'd'로 주어진 날짜에서 'n' 월수를 더한 날짜 반환
+예)  회원테이블에서 mem_memorial 컬럼이 가입일이라고 가정했을 때, 모든 회원의 유효기간이 3개월이며
+    모두 재등록할 경우 재 등록 날짜 10일전에 문자데이터를 전송하고자 한다.
+    각 회원의 문자전송 시작일을 구하시오.
+    alias는 회원번호, 회원명, 가입일, 종료일, 문자전송일
+    
+    select * from member;
+    select mem_id 회원번호, mem_name 회원명, mem_memorialday 가입일, 
+            add_months(mem_memorialday,3) 종료일,
+            add_months(mem_memorialday,3)-10 문자전송일
+        from member;
+    
+    select add_months(sysdate,-4) from dual;  
+3. next_day(d, char)
+    - 주어진 날짜 'd' 이후 처음 만나는 char요일 날짜
+    select next_day(sysdate, '금') from dual;
+    select next_day(sysdate, '목요일') from dual;
+
+4. last_day(d)
+    - 주어진 날짜 'd'의 월에 해당하는 마지막일자 반환
+    select last_day(sysdate), last_day('20000210') from dual;
+
+5. months_between(d1, d2)
+    - 두 날짜 자료 'd1'과 'd2' 사이의 개월수를 반환
+    select round(months_between(sysdate, '00010101')) from dual;
+    
+6. extract(fmt from d)
+    - 주어진 날짜데이터 'd'에서 fmt로 정의된 값을 추출하여 반환
+    - fmt는 year, month, day, hour, minute, second를 의미함
+    select extract(month from sysdate) 달 from dual;
+예) 매입테이블에서 월별 매입정보를 조회하시오
+    alias는 월, 매입수량, 매입금액
+    select * from buyprod;
+    select extract(month from buy_date) 월 , sum(buy_qty) 매입수량, sum(buy_qty*buy_cost) 매입금액,
+            count(*) 건수
+        from buyprod
+        where extract(year from buy_date) = 2005
+        group by extract(month from buy_date)
+        order by 1;
+예)대출잔액테이블(kor_loan_status)에서 2013년 대출현황을 조회하시오
+    월, 지역, 구분, 대출잔액
+    select * from kor_loan_status;
+    select substr(period, 5) 월, region 지역, gubun 구분, loan_jan_amt 대출잔액
+        from kor_loan_status
+        where substr(period, 1,4) = 2013
+        order by 1,3;
+예) 사원테이블에서 11월에 입사한 사원벙보를 조회하시오
+    사원번호, 사원명, 부서코드, 이메일
+    select * from employees;
+    select employee_id 사원번호, emp_name 사원명, department_id 부서코드, email 이메일, hire_date 입사일
+        from employees
+--        where extract(month from hire_date) = 11;
+        where extract(month from hire_date) = extract(month from sysdate);        
+        
+2020-11-26-02) 형변환 함수
+1. CAST(expr as 타입[(크기)])
+    - 'expr'로 제공되는 자료를 '타입[(크기)]'    
+    
+select * from lprod;
+예) 분류테이블의 lprod_id 컬럼의 데이터 타입을 number(7)에서
+    char(10)으로 변경 출력하시오
+    
+    select cast(lprod_id as char(10)) 순번,
+            lprod_gu 분류코드,
+            lprod_nm 분류명
+        from lprod;
+        
+    예) 사원테이블에서 부서코드 50에 속한 사원들의 근속년수를 조회하시오.
+    사원번호, 사원명, 입사일, 근속년수이며, 근속년수는 'xx년' 형식의 문자열로 변환 출력하시오.
+    select employee_id 사원번호, emp_name 사원명, hire_date 입사일, 
+            cast((extract(year from sysdate)-extract(year from hire_date)) as char(2))||'년' 근속년수,
+            (extract(year from sysdate)-extract(year from hire_date))||'년' 근속년수
+        from employees
+        where department_id =50;
+
+2.to_char(c) : char, clob 타입을 자료 'c'를 varchar2 타입의 문자열로 변환
+    to_char(d[,fmt]) : 날짜자료 d를 fmt 형식으로 문자열로 변환
+    to_char(n[,fnt]) : 숫자자료 'n'을 fmt 형식의 문자열로 변환
+        
+    -날자형식 지정문자열
+    ------------------------------------------------------------------
+    형식 문자열                  의미              사용 예
+    ------------------------------------------------------------------
+    AD, BC, CC             세기를 출력          To_char(sysdate, 'CC')
+        ex) select to_char(sysdate, 'cc'),
+                    to_char(sysdate, 'ad'),
+                    to_char(sysdate, 'bc')
+                from dual;
+    YYYY,YYY,YY,Y           년도를 출력          To_char(sysdate, 'YY')
+        ex) select to_char(sysdate, 'YYYY'),
+                    to_char(sysdate, 'YYY'),
+                    to_char(sysdate, 'YY'),
+                    to_char(sysdate, 'Y')
+                from dual;
+    Q                       분기               To_char(sysdate, 'YY Q')
+        ex) select to_char(sysdate,'MM"월은" Q"분기"') from dual;
+    Month, mon, MM RM       월                 To_char(sysdate, 'YYYY-MM')
+        ex) select to_char(sysdate, 'YYYY-MM'),
+                    to_char(sysdate, 'YYYY-RM'),
+                    to_char(sysdate, 'YYYY-MON'),
+                    to_char(sysdate, 'YYYY-MONTH')
+                from dual;
+    W,WW,IW                 주차
+         ex) select to_char(sysdate,'W'),
+                    to_char(sysdate,'WW'),
+                    to_char(sysdate,'IW')
+                from dual;
+    
+    D, DD, DDD, J           일
+        D : 해당일이 속한 주에서 경과된 일수
+        DD : 해당일이 속한 월에서 경과된 일수
+        DDD : 해당일이 속한 년에서 경과된 일수
+        J : 기원전 4712년 이후 경과된 일수
+        ex) 
+        select to_char(sysdate,'d'), to_char(sysdate,'dd'), to_char(sysdate,'ddd'), 
+                    to_char(sysdate,'j') from dual; 
+        
+    DAY, DY                 주의 요일
+        ex) 
+        select to_char(sysdate, 'day'), to_char(sysdate, 'dy') from dual;
+    HH, HH24, HH12          시간 (HH와 HH12는 같은 형식)
+    AM, PM, A.M, P.M        오전, 오후 표현
+    MI                      분
+    SS, SSSSS               초('SSSSS' : 자정이후 경과된 시간을 초로 반환)
+    기타                     사용자가 임의로 정한 문자열은 "   "안에 기술
+    -----------------------------------------------------------------
+    select to_char(mem_bir),
+        to_char(mem_bir, 'YYYY-MM-DD day')
+        from member;
+    
+    -숫자형식 지정문자열
+    ------------------------------------------------------------------
+    형식문자열                 의미
+    ------------------------------------------------------------------
+    9                   대응되는 위치의 값이 유효한 값이라면 데이터를 출력하고 무효의 0은 공백처리
+    
+    0                   대응되는 위치의 값이 유효한 값이라면 데이터를 출력하고 무효의 0은 출력
+    
+    $, L                화폐기호를 출력
+    
+    MI                  음수 출력인 경우 우측에 '-' 부호 출력
+    
+    pr                  음수 출력인 경우 '-' 부호 '< >'안에 출력
+    
+    ,(콤마), .(소숫점)
+    
+    ------------------------------------------------------------------
+    
+    000890000
+    999,999,999.99 --9 모드
+    000,000,000.00 --0 모드
+    --------------
+        890,000.00 --9 모드
+    000,890,000.00 --0 모드
+    
+    
+    예) 2005년 2월 제품별 매입현황을 조회하시오
+        제품코드, 매입수량, 매입금액
+    select buy_prod 제품코드, 
+            to_char(sum(buy_qty),'999') 매입수량, 
+            to_char(sum(buy_qty*buy_cost),'L99,999,999') 매입금액
+        from buyprod
+        where buy_date between '20050201' and last_day('20050201')
+        group by buy_prod
+        order by 3;
+
+2020-11-27-01)
+1. to_number(c[,fmt])
+ - 숫자형식으로 제공된 문자열을 숫자형으로 변환
+ - 사용되는 fmt는 to_char에서 사용하는 형식지정 문자열과 동일
+ 예) 오늘이 2005년 7월 28일이고 'h001'회원이 상품'P201000003'을 3개 구입했을 때
+    cart테이블에 해당 내용을 삽입하시오.
+    
+    cart_no : 년월일+순번(5자리수)
+            => '20050728';
+             select '20050728'||trim(to_char(to_number(max(substr(cart_no, 9)))+1,'00000'))
+                from cart
+                where cart_no like '20050728%';
+        
+   insert into cart
+            select 'g001', '20050728'||trim(to_char(to_number(max(substr(cart_no, 9)))+1,'00000')),
+                    'P202000009',
+                    13
+                from cart
+                where cart_no like '20050728%';
+예) 사원테이블의 전화번호를 숫자로 변환
+    select emp_name, to_number(replace(phone_number,'.'))
+        from employees;
+    
+    select emp_name, to_number(replace(to_char(hire_date),'/'))
+        from employees;
+        
+4.to_date(c[,fmt])
+ - 날짜형식의 문자열을 날짜타입으로 변환
+ - 형식지정문자열은 to_char의 형식지정 문자열과 동일
+ 
+ 예) 2005년 6월 13일 판매일보를 작성하시오.
+    날짜, 상품코드, 판매수량, 구매자
+    날짜, 상품코드, 판매수량, 구매자
+    select * from cart;
+    select to_date(substr(cart_no, 0, 8), 'YYYY-MM-DD') 날짜, 
+            cart_prod 상품코드, 
+            cart_qty 판매수량,
+            cart_member 구매자
+        from cart
+        where substr(cart_no, 0,8) = '20050613'
+        order by 3;
+        
+
+2020-11-27-02)집계함수
+    - 한 테이블의 데이터들을 특정컬럼을 기준으로 그룹화하고 각 그룹내의 데이터에 대하여
+      집계처리(합계, 평균, 갯수, 최대값, 최소값)
+    - sum, avg, count, min, max
+    - select 절에 집계함수와 일반컬럼이 같이 사용되면 반드시 group by절이 기술되어야함.
+    (사용형식)
+    select 컬럼명1,...,
+            sum(컬럼명)|count(*|컬럼명) |max(컬럼명)|min(컬럼명)
+        from 테이블명
+        [where 조건]
+        [group by 컬럼명1,..]
+        [having 조건]
+        [order by 컬럼명|컬럼인덱스];
+        . select 절에서 '[컬럼명1,...,]'이 생략되면 group by 절이 필요 없음
+        (테이블 전체가 하나의 그룹)
+        . '[group by 컬럼명1,..]'에 기술되는 컬럼명은 select 절에서 집계함수 이외의 
+        컬럼명을 기술하고 필요에 따라 select절에서 기술하지 앟은 컬럼도 기술 가능
+        . 'group by'다음에 기술되는 컬럼의 순서는 그룹핑 되는 순서임.
+        .'[having 조건]' : 집계함수 자체에 조건이 부여된 경우 사용
+        
+1.sum(column)
+    -'column'에 저장된 각 그룹별 합계를 구하여 반환
+예)사원테이블에서 전체 사원들의 급여 합계를 구하시오
+    select sum(salary)
+        from employees;
+
+예)사원테이블에서 부서별 사원들의 급여 합계를 구하시오
+    select  department_id 부서명, sum(salary), count(*)
+        from employees
+        group by department_id
+        order by 1;
+예) 회원테이블에서 남녀 회원별 마일리지 합계를 조회하시오.
+    select * from member;
+    select case when substr(mem_regno2,1,1) = 1 or substr(mem_regno2,1,1) = 3 then '남성'
+                else '여성' end 성별,
+            sum(mem_mileage)
+        from member
+        group by case when substr(mem_regno2,1,1) = 1 or substr(mem_regno2,1,1) = 3 then '남성'
+                else '여성' end
+        order by 1;
+
+예)2005년 2-3월 제품별 매입현황을 조회
+    select * from buyprod;
+    select buy_prod 제품별, sum(buy_qty) 수량합계, to_char(sum(buy_qty*buy_cost), '99,999,999') 금액합계
+        from buyprod
+        where buy_date between '20050201' and '20050331'
+        group by buy_prod
+        order by 1;
+        
+예)2005년 2-3월 제품별 매입현황을 조회하되 매입수량이 100개 이상인 제품만 조회하시오.
+    select * from buyprod;
+    select buy_prod 제품별, sum(buy_qty) 수량합계, to_char(sum(buy_qty*buy_cost), '99,999,999') 금액합계
+        from buyprod
+        where buy_date between '20050201' and '20050331'
+        having sum(buy_qty) >= 100          -- having으로 sum(집계함수) 조건을 적어놓자!
+        group by buy_prod
+        order by 1;
+        
+        
+** 상품테이블에서 재고량을 변경하시오
+    재고량은 적정재고량의 130%이며 정수이다.
+    select prod_totalstock 재고량, prod_properstock 적정재고량 from prod;
+    update prod
+        set prod_totalstock = to_number(prod_properstock + prod_properstock*0.3);
+
+예)상품테이블에서 상품 분류별 재고 합계를 구하시오 250개 이상 남아있는 자료를 조회
+    select * from prod;
+    select prod_lgu as 상품분류,
+            sum(prod_totalstock) as 재고합계
+        from prod
+        having sum(prod_totalstock) >=250
+        group by prod_lgu
+        order by 1;
+    
+예) 장바구니테이블에서 2005년 5월 회원별 매출집계
+    회원번호, 매출수량합계
+    select * from cart;
+    select cart_member 회원번호, sum(cart_qty) 매출수량합계
+        from cart
+        where substr(cart_no,1, 6) = '200505'
+        group by cart_member
+        order by 1;
+예) 장바구니테이블에서 2005년 5월 제품별 매출집계
+    제품코드, 매출수량합계
+    select cart_prod 제품코드, sum(cart_qty)
+        from cart
+        where cart_no like '200505%'
+        group by cart_prod
+        order by 1;
+예) 장바구니테이블에서 2005년 5월 일자별 회원별 매출집계
+    날짜, 회원번호, 매출수량합계
+    select to_date(substr(cart_no, 1, 8)) 날짜, 
+            cart_member 회원번호,
+            sum(cart_qty) 매출수량합계
+        from cart
+        where substr(cart_no, 1, 6) = '200505' --cart_no like '200505%'
+        group by to_date(substr(cart_no, 1, 8)), cart_member
+        order by 1;
+        
+
+2020-11-30-01)
+2. AVG(column)
+    - 'column'을 기준으로 그룹으로 묶인 집단에 대한 평균값 반환
+    예) 사원테이블에서 각 부서별 평균 급여를 소수 1자리까지 구하시오.
+    select department_id as 부서코드,
+--            emp_name as 사원이름,
+            round(avg(salary),1)
+        from employees
+        group by department_id--, emp_name
+        order by 1;
+    
+예) 상품테이블에서 상품분류별 평균매입가를 구하시오.
+select * from prod;
+select prod_lgu 분류코드,
+        round(avg(prod_cost), -1) as 평균매입가
+    from prod
+    group by prod_lgu;
+    
+예제)2005년 월별 제품별 평균매입수량과 매입금액합계를 구하시오.
+select * from buyprod;
+select * from prod;
+select extract(month from buy_date)월, 
+        buy_prod 제품, 
+        round(avg(buy_qty),0) 평균매입수량, 
+        sum(buy_qty*buy_cost)매입금액합계
+    from buyprod
+    where extract(year from buy_date) = 2005
+    group by extract(month from buy_date), buy_prod
+    order by 1;
+    
+예제) 2005년 5월 일자별 평균판매 수량을 구하시오,
+select * from cart;
+select to_date(substr(cart_no,1,8)) 일자,
+        round(avg(cart_qty),0) 평균판매수량
+    from cart
+    where cart_no like '200505%'
+    group by substr(cart_no,1,8)
+    order by 1;
+
+예제) 사원테이블에서 각 부서별 평균급여보다 많은 급여를 받는 사원정보를 출력하시오.
+select * from employees;
+select department_id did,
+        avg(salary) asal
+       from employees
+       group by  department_id;
+
+
+select a.employee_id 사원번호,
+        a.emp_name 사원명, 
+        a.department_id 부서코드, 
+        b.department_name 부서명,
+        round(c.asal) 평균급여,
+        a.salary 급여
+       from employees a, departments b,
+            (select department_id did,
+                    avg(salary) asal
+               from employees
+               group by department_id) c
+       where a.department_id = b.department_id
+            and a. department_id = c.did
+            and a.salary >=asal
+       order by 3,5; 
+        
+3. count(*|column)
+    - 그룹으로 묶인 각 그룹에 포함된 자류 수(행의 수)
+    - 외부조인에 count함수를 사용할 경우 '*' 대신 컬럼명을 사용해야 함
+
+예) 사원테이블에서 각 부서별 인원수를 구하시오
+select department_id 부서코드, count(*) 인원수, count(emp_name) 사원수
+    from employees
+    group by department_id;
+    
+예)2005년 6월 제품별 판매건수를 조회하시오
+select prod_id 상품코드, -- 많은쪽을 써준다.
+        prod_name 상품명,
+        count(cart_member) 판매건수, -- outer join에서 count(*이걸 쓰면 안된다)
+        cart_no 날짜
+    from cart
+    right outer join prod on (cart_prod = prod_id
+        and cart_no like '200506%')
+    group by prod_id, prod_name, cart_no
+    order by 1;
+
+        
+예제) 상품테이블에서 각 분류별 상품의 수를 조회하시오.
+select * from prod;
+select * from cart;
+
+select cart_qty qty, substr(cart_prod,1,4) from cart;
+select prod_lgu, 
+        count(prod_name) 
+    from prod
+    group by prod_lgu
+    order by 1;
+    
+
+예제) 회원테이블에서 각 연령대별 회원수를 조회하시오.
+select * from member;    
+    
+select trunc(extract(year from sysdate) - extract(year from mem_bir),-1)||'대' as 연령대,
+        count(*) 회원수
+     from member
+     group by trunc(extract(year from sysdate) - extract(year from mem_bir),-1)
+     order by 1;
+
+예제) 회원테이블에서 직업 종류별 회원수를 구하시오.
+    select * from member;
+    select mem_job 직업종류, 
+            count(*) 회원수
+        from member
+        group by mem_job;
+    -- distinct (중복제거)
+예제) 회원테이블에서 직업의 종류를 출력하시오
+    직업명
+    select distinct(mem_job) 직업종류
+        from member
+        order by 1;
+        
+4. max(column), min(column)
+    - 'column'으로 기술 컬럼에 저장된 값 중 최대값과 최소값을 구하여 반환
+    - 내부적으로 계산방식하는 방식은 'column'을 기준으로 오름차순정렬(min), 또는
+      내림차순 정열 후 그 중 첫번째 행의 값을 반환
+      따라서 처리시간이 다소 많이 소요됨.
+    
+    **의사칼럼 rownum
+        - 쿼리 결과(뷰)의 각행에 부여된 순번 값
+        - 상위 5개 또는 하위 5개 등 필요한 갯수의 결과만을 출력할 때 사용(다른 dbms에서는 top 함수로 제공됨)
+        
+예) 회원의 마일리지 중 최대마일리지 값을 구하시오
+select max(mem_mileage)
+from member;
+
+select mem_mileage
+    from member
+    where rownum <= 5
+    order by 1 desc; -- order by 보다 where절이 먼저 실행되서 5개 중에서 내림차순한다.?
+    
+-------------------------------------순서가 중요하다!!--------------------------------------------
+select a.mem_mileage
+    from (select mem_mileage from member order by 1 desc) a -- 그래서 여기에 먼저 쓴다.
+    where rownum <=1;
+    
+예) 사원테이블에서 부서별 최대 급여와 최소급여를 조회하시오
+select department_id 부서, max(salary) 최대급여, min(salary) 최소급여
+    from employees
+    group by department_id
+    order by 1;
+
+
+2020-11-30-02) rollup과 cube
+    - sum 함수는 그룹별 집계만 반환하며 전체 합계를 반환하지 않음
+    - group by 절에 기술된 컬럼을 기준으로만 집계반환
+ex)
+select period, gubun,
+        sum(loan_jan_amt)
+    from kor_loan_status
+    group by period, gubun
+    order by 1,2;
+    
+1. rollup
+    - group by 절에 사용
+    - rollup 다음에 기술된 컬럼들을 기준으로 레벨별 집계가 필요한 경우 사용
+    (사용형식)
+    group by rollup(컬럼명1(컬럼명2,..])
+    . rollup 다음 기술된 컬럼의 수가 n개일 때 n +1 종류의 집계 반환
+    . 컬럼명1과 컬럼명2를 적용한 집계(group by와 동일)
+      컬럼명1을 기준으로 적용한 집계
+      전체집계;
+      
+   select period, gubun,
+        sum(loan_jan_amt)
+    from kor_loan_status
+    group by rollup(period, gubun)
+    order by 1,2;
+    
+    select sum(loan_jan_amt)
+        from kor_loan_status;
+        
+예) 대출테이블에서 기간별, 지역별, 구분별 대출잔액의 합계를 조회하시오.
+(group by 절만 사용);
+select period, region, gubun,
+        sum(loan_jan_amt)
+    from kor_loan_status
+    group by period, region, gubun
+    order by 1,2;
+(rollup 계층별 집계사용 할때 자주 사용);
+select period, region, gubun,
+        sum(loan_jan_amt)
+    from kor_loan_status
+    group by cube(period, region, gubun)
+    order by 1,2;
+
+
+2020-12-01-01)
+2. cube(col1, col2,...)
+    - 다양한 집계처리(2^사용된 컬럼수)
+    - rollup과 사용 방식은 같으나 레벨이 적용되지 않음.
+예)대출잔액테이블(kor_loan_status)에서 기간, 지역, 대출구분 항목을 이용하여 조합 가능한 모든 집계를 조회
+    select period, region, gubun, sum(loan_jan_amt)
+        from kor_loan_status
+        group by cube(period, region, gubun)
+        order by 1,2;
+        
+    select period, region, gubun, sum(loan_jan_amt)
+        from kor_loan_status
+        group by rollup(period, region, gubun)
+        order by 1,2;
+
+
+2020-12-01-02) null 처리함수
+    - 연산에 사용되는 항목 중 null을 포함 하는 경우 결과가 null로 반환
+    - is [not] null, nvl, nvl2, nullif 등의 함수(연산자)가 제공 됨
+
+1. is [not] null
+    - null 값 여부를 비교하기 위해여 '-' 사용은 허용되지 않음.
+    - 반드시 is[not] null 연산자를 사용해야 함.
+
+예)사원테이블에서 영업실적코드(commission_pct)가 null이 아닌 사원을 조회하시오.
+    사원번호, 사원명, 부서코드, 영업실적
+    select employee_id 사원번호,emp_name 사원명, department_id 부서코드, commission_pct 영업실적
+        from employees
+        where commission_pct = nvl(commission_pct,0);
+        where commission_pct is not null;
+    
+2. nvl(c, val)
+    - 'c'(컬럼명)의 값이 null이면 'val'을 반환하고 null이 아니면 'c'의 값을 반환
+    - 연산에 사용되는 숫자 항목의 값이 null을 포함할 위험이 있는 경우 사용
+    - 'c'의 데이터 타입과 val의 데이터 타입은 일치해야함.
+예) create table temp(
+    col1 number(6),
+    col2 varchar2(20) not null,
+    col3 date);
+    
+    insert into temp(col2) values('대전시');
+    insert into temp values(10, '중구', sysdate);
+    
+temp의 col1에 5를 더한 값을 출력하시오.
+select col1+5 from temp WHERE col1 is not null;
+select * from temp;
+
+예) 사원테이블에서 영업실정에 따른 보너스를 출력하시오
+    사원번호, 사원명, 영업실적, 보너스 (nvl 미사용)
+    select employee_id 사원번호, 
+            emp_name 사원명, 
+            commission_pct 영업실적, 
+            commission_pct*salary 보너스
+        from employees;
+        
+    select employee_id 사원번호, 
+            emp_name 사원명, 
+            nvl(commission_pct,0) 영업실적, 
+            nvl(commission_pct*salary,0) 보너스
+        from employees;
+        
+**회원테이블에서 회원번호 'r001', 'd001', 'k001'회원의 마일리지를 null로 바꾸시오.
+    select * from member;
+    select mem_id 회원번호, mem_mileage 마일리지
+        from member
+        where mem_id in ('r001', 'd001', 'k001');
+    
+    update member
+        set mem_mileage = null
+        where lower(mem_id) in('r001', 'd001', 'k001');
+예제) 모든 회원들에게 500마일리지를 추가로 지급하려한다.
+    회원번호, 회원명, 기존마일리지, 변경마일리지를 출력
+    select mem_id 화원번호,
+            mem_name 회원명, 
+            mem_mileage 기존마일리지, 
+            nvl(mem_mileage,0) + 500 변경마일리지
+        from member;
+        
+예)매입테이블에서 2005년 3월 모든 상품별 매입현황을 조회하시오
+    상품코드, 상품명, 매입수량, 매입금액
+    select * from prod;
+    select * from buyprod;
+    select a.buy_prod 상품코드, 
+            b.prod_name 상품명, 
+            sum(buy_qty) 매입수량, 
+            sum(buy_cost*buy_qty) 매입금액
+         from buyprod a, prod b
+         where b.prod_id = a.buy_prod and a.buy_date between '20050301' and '20050331'
+         group by a.buy_prod, b.prod_name;
+    -- outer jon
+    select b.prod_id 상품코드, 
+            b.prod_name 상품명, 
+            nvl(sum(a.buy_qty),0) 매입수량, 
+            nvl(sum(a.buy_cost*a.buy_qty),0) 매입금액
+         from buyprod a
+                right outer join prod b on(a.buy_prod = b.prod_id
+                and a.buy_date between '20050301'and '20050331')
+         group by b.prod_id, b.prod_name
+         order by 1;
+         
+3.nvl2(c, val1, val2)
+    -'c'의 값이  null이 아니면 val1을 ///// null이면 val2를 반환함
+    'val1'과 'val2'는 같은 데이터 타입이어야 함.
+    
+    
+예) 회원테이블에서 마일리지가 null인 회원을 조회하여 비고란에 '탈퇴회원'을,,
+    null이 아닌 회원은 '정상회원'을 출력하시오
+    
+select * from member;
+select mem_id 회원번호, 
+        mem_name 회원명, 
+        mem_mileage 마일리지, 
+        nvl2(mem_mileage,'정상회원','탈퇴회원') 비고
+--        nvl(to_char(mem_mileage),'탈퇴회원') 비고
+    from member;
+    
+예제) 모든 회원들에게 500마일리지를 추가로 지급하려한다.
+회원번호, 회원명, 기존마일리지, 변경마일리지를 출력
+select mem_id 화원번호,
+    mem_name 회원명, 
+    mem_mileage 기존마일리지, 
+    nvl(mem_mileage,mem_mileage,0) + 500 변경마일리지
+from member;
+
+4.nullif(c1, c2)
+    -'c1'과 'c2'가 같으면 null, 다른 값이면 c1을 반환
+    
+** 상품테이블에서 분류코드가 'P201'인 상품의 할인판매가격을 매입가격으로 변경하시오.
+select * from prod where prod_lgu = 'P201';
+commit;
+update prod
+    set prod_sale = prod_cost 
+    where prod_lgu = 'P201';
+    
+예) 상품테이블에서 매입가격과 할인판매 가격이 같은 상품은 '마감처리물품',
+    서로 다르면 '정상상품'을 비고란에 출력
+select * from prod;
+select prod_id 상품코드, 
+        prod_cost 매입가격, 
+        prod_sale 할인판매가격, 
+        nvl2(nullif(prod_cost, prod_sale),'정상상품', '마감처리물품')비고
+    from prod;
+    
+2020-12-01-03) Join
+    - rdb의 핵심 기능
+    - 관계형데이터 베이스는 자료가 여러 테이블에 분산되어 저장되고
+        테이블 간의 관계가 맺어져 있음
+    - 따라서 여러 테이블에서 필요한 자료를 조회하기 위해 조인연산이 필요
+    - 조인연산은 연산에 참여하는 테입르 간의 관계가 맺어져 있음을 전제로 함
+    (조인의 종류)
+    1)방식에 따라 : 일반조인, ansi 조인
+    2)조인 조건에 사용하는 연산자에 따라 equi join, non equi join
+    3)참가하는 행들의 확장 여부에 따라 내부조인(inner join), 외부조인(outer join)
+    4)그 밖에 self join, cartesian product(cross join) 등으로 나뉨.
+    (사용형식)
+    select 컬럼list
+        from 테이블명1 [별칭1], 테이블명2 [별칭2] [,테이블명3 [별칭3],...]
+        where 조인조건1
+        [and 조인조건2,...]
+        [and 조인조건,...]
+        . 테이블명에는 별칭을 사용하여 동일한 컬럼명이 두개 이상의 테이블에 사용된 경우 소속을 구별해줌
+        . 별칭을 사용하지 않는 경우 동일한 컬럼명은 '테이블명, 컬럼명' 형식으로 기술해야함
+        . 조인조건은 두 테이블 사이에 존재하는 같은 값을 갖는 컬럼간의 동등성('=')등을 
+          평가하기 위한 조건으로 n개의 테이블이 사용된 경우 적어도 n-1개의 조인조건이 필요함
+        . 일반조건과 조인조건의 기술 순서는 일정한 규칙이 없음.
+
+1. cartesian product
+    - 모든 행, 모든 열의 조합이 발생(행들은 곰한 값
+    - 특별한 목적이 아닌 경우 사용되지 않음
+    - 조인조건이 없거나 잘못 설정된 경우에두 발생됨.
+    - ansi에서는 cross join
+예);
+select count(*) from cart;
+select count(*) from customers;
+select count(*)
+    from cart a, customers b;
+(ansi 형식);
+select count(*)
+    from cart cross join customers;
+select count(*)
+    from cart cross join customers cross join prod;
+
+
+select 55500*209 from dual;
+
+2. equi join(동등 조인)
+    - 대부분의 조인 형식
+    - 조인조건에 '='연산자가 사용됨
+    - ansi에서는 inner join으로 구현됨
+    (ansi 사용형식)
+    select 컬럼list
+    from 테이블명1[별칭]
+        inner join 테이블명2[별칭] on (조인조건
+            [and 일반조건])
+        [inner join 테이블명3[별칭] on (조인조건
+            [and 일반조건])]
+    [where 일반조건]
+
+예)장바구니테이블에서 2005년 6월 판매현황을 조회하시오
+    일자, 회원명, 상품명, 판매수량, 판매금액;
+select * from cart;
+select * from member;
+select *from prod;
+
+-- 경유해서 가져오기 --
+select to_date(substr(a.cart_no,1,8)) 일자,
+        b.mem_name 회원명, 
+        c.prod_name 상품명, 
+        a.cart_qty 판매수량, 
+        a.cart_qty*c.prod_price 판매금액
+    from cart a, member b, prod c
+    where a.CART_MEMBER = b.mem_id  --조인조건
+        and a.cart_prod = c.prod_id --조인조건
+        and A.cart_no like '200506%'
+    order by 1;
+    
+    -- 부모테이블의 자식테이블의 기본키가 되는걸 식별관계
+    -- 부모테이블의 자식테이블의 일반키가 되는걸 비식별관계
+    
+
+2020-12-02-01)
+예)상품테이블에서 상품의 분류코드가 'P200'대의 상품을 조회하시오
+상품코드, 상품명, 분류코드, 분류명, 판매가격
+(일반 조인)
+select * from prod;
+select * from lprod;
+select a.prod_id 상품코드, a.prod_name 상품명, a.prod_lgu 분류코드, 
+        b.lprod_nm 분류명, a.prod_price 판매가격
+    from prod a , lprod b
+    where a.prod_lgu like 'P2%' --일반조건
+        and a.prod_lgu = b.lprod_gu
+    order by 3;
+
+(ansi 조인)
+select a.prod_id 상품코드, a.prod_name 상품명, a.prod_lgu 분류코드, 
+        b.lprod_nm 분류명, a.prod_price 판매가격
+    from prod a
+        inner join lprod b on(a.prod_lgu = b.lprod_gu) --조인조건
+    where a.prod_lgu like 'P2%' --일반조건
+    order by 3;
+    
+예제) 2005년 1월 1일 ~ 15일 동안 발생된 매입자료
+
+select * from buyprod;
+select * from prod;
+select buy_date  
+    from buyprod
+    where buy_date between '20050101' and '20050115';
+select a.buy_date 일자, 
+        a.BUY_PROD 상품코드, 
+        b.prod_name 상품명,
+        a.BUY_QTY 수량,
+        a.buy_qty * a.BUY_COST 금액
+    from buyprod a, prod b
+    where a.BUY_PROD = b.prod_id --join조건
+        and a.BUY_DATE between '20050101' and '20050115';
+-- outer 모든 테이블을 출력한다.
+-- inner 조건에 해당하는 값들만 출력한다.
+-- ansi
+select a.buy_date 일자, 
+        a.BUY_PROD 상품코드, 
+        b.prod_name 상품명,
+        a.BUY_QTY 수량,
+        a.buy_qty * a.BUY_COST 금액
+    from buyprod a 
+        inner join prod b on(a.BUY_PROD = b.prod_id --join조건
+        and a.BUY_DATE between '20050101' and '20050115') --일반조건
+    order by 1;
+
+예제)2005년 5월 제품별 매입/매출현황을 조회하시오
+    상품코드, 상품명, 매출액합계, 매입액합계
+select * from prod;
+select * from buyprod;
+select * from cart;
+
+select a.prod_id 상품코드, a.prod_name 상품명,
+        sum(c.cart_qty*a.prod_price) 매출액합계,
+        sum(b.buy_qty*b.buy_cost) 매입액합계
+    from prod a, buyprod b, cart c
+    where a.prod_id = b.buy_prod and b.buy_prod = c.cart_prod --join condition
+        and c.cart_no like '200505%'
+        and b.BUY_DATE between '20050501' and '20050531'
+    group by a.prod_id, a.prod_name
+    order by 1;
+
+예제)2005년 5월 제품별 매출현황을 조회하시오
+select c.prod_id 상품코드, 
+        c.prod_name 상품명,
+        sum(a.cart_qty * c.prod_price) 매출액합계
+    from cart a, prod c
+    where a.cart_prod = c.prod_id --join condition
+        and a.cart_no like '200505%'
+    group by c.prod_id, c.prod_name
+    order by 1;
+
+--ansi
+select c.prod_id 상품코드, c.prod_name 상품명,
+        sum(a.cart_qty*c.prod_price) 매출액합계,
+        sum(b.buy_qty*b.buy_cost) 매입액합계
+    from cart a
+        right outer join prod c on(a.cart_prod = c.prod_id
+        and a.cart_no like '200505%')
+        left outer join buyprod b on(b.buy_prod=c.prod_id
+        and b.BUY_DATE between '20050501' and '20050531')
+    group by c.prod_id, c.prod_name
+    order by 1;
+    
+예제) 2005년 1~6월 사이 거래처별 매입현황을 조회하시오.
+    거래처코드, 거래처명, 매입액합계
+select distinct(buyer_name) from buyer;
+select * from prod;
+select * from buyprod;
+
+select a.buyer_id 거래처코드, a.buyer_name 거래처명, sum(c.BUY_QTY*c.buy_cost) 매입액합계
+    from buyer a, prod b, buyprod c
+    where a.buyer_id(+) = b.prod_buyer
+        and b.prod_id = c.BUY_PROD(+)
+        and c.buy_date between '20050101' and '20050630'
+    group by a.buyer_id, a.buyer_name
+    order by 1;
+
+--ansi
+select a.buyer_id 거래처코드, a.buyer_name 거래처명, sum(c.BUY_QTY*c.buy_cost) 매입액합계
+    from buyer a
+        right outer join prod b on(a.buyer_id = b.prod_buyer)
+        left outer join buyprod c on(b.prod_id = c.buy_prod
+        and c.buy_date between '20050101' and '20050630')
+    group by a.buyer_id, a.buyer_name
+    order by 1;
+    
+select a.buyer_id 거래처코드, a.buyer_name 거래처명, sum(c.BUY_QTY*c.buy_cost) 매입액합계
+    from buyer a
+        inner join prod b on(a.buyer_id = b.prod_buyer)
+        inner join buyprod c on(b.prod_id = c.buy_prod
+        and c.buy_date between '20050101' and '20050630')
+        --where는 일반조건이 2개일 시 쓰면 결과가 이상해진다!!
+    group by a.buyer_id, a.buyer_name
+    order by 1;
+    
+예제) 장바구니테이블에서 2005년 5월 회원별 구매금액을 조회하시오
+    회원번호, 회원명, 구매액
+select *from cart;
+select *from member;
+select *from prod;
+    select b.mem_id 회원번호, 
+            b.mem_name 회원명, 
+            nvl(sum(a.cart_qty*c.prod_price),0) 구매액
+        from cart a, member b, prod c
+        where a.CART_PROD = c.prod_id   --join 조건 구매액을 구하기 위해(prod_price).
+            and a.CART_MEMBER = b.mem_id --join 조건 회원이름 가져오기 위해.
+            and substr(a.cart_no,1,6) = 200505
+--            and a.cart_no like '200505%'
+        group by b.mem_id, b.mem_name
+        order by 1;
+
+--ansi 회원이름이 어느 테이블에 속해있는지 알고. 전부 속해있는 테이블(member)을 기준으로
+--테이블(member)이 오른쪽에 있으면 right 왼쪽에 있으면 left
+        select b.mem_id 회원번호, 
+            b.mem_name 회원명, 
+            sum(a.cart_qty*c.prod_price) 구매액
+        from cart a
+            right outer join member b on( a.CART_MEMBER = b.mem_id)
+            left outer join prod c on (a.CART_PROD = c.prod_id
+            and substr(a.cart_no,1,8) like '200505%')
+        group by b.mem_id, b.mem_name
+        order by 1;
+            
+--ansi inner
+        select b.mem_id 회원번호, 
+            b.mem_name 회원명, 
+            sum(a.cart_qty*c.prod_price) 구매액
+        from cart a  --이것과 member가 연관이 있어야 서로 비교하여 쓸수 있다.
+            inner join member b on( a.CART_MEMBER = b.mem_id)
+            inner join prod c on (a.CART_PROD = c.prod_id
+            and substr(a.cart_no,1,8) like '200505%')
+        group by b.mem_id, b.mem_name
+        order by 1;
+        
+         select b.mem_id 회원번호, 
+            b.mem_name 회원명, 
+            sum(a.cart_qty*c.prod_price) 구매액
+        from member b  --member와 cart가 연관이 있어야 서로 비교하여 쓸수 있다.
+            inner join cart a on( a.CART_MEMBER = b.mem_id
+            and substr(a.cart_no,1,8) like '200505%')
+            inner join prod c on (a.CART_PROD = c.prod_id)
+        group by b.mem_id, b.mem_name
+        order by 1;
+
+예제) 사원테이블에서 관리자(manager_id)별 사원정보를 조회하시오.
+
+select *from employees;
+select * from departments;
+select manager_id 관리자번호, 
+        department_name 부서명,
+        count(*) 소속사원수 
+    from departments
+    group by manager_id, department_name
+    order by 1;
+select a.manager_id 관리자번호, 
+        b.emp_name 관리자명, 
+        count(a.department_name) 소속사원수, 
+        a.department_name 부서명
+    from departments a, employees b
+    where a.DEPARTMENT_ID = b.department_id
+    group by rollup(a.manager_id, a.department_name, b.emp_name)
+    order by 3;
+
+
+2020-12-02-02) join
+3. self join --무엇때문에 쓰는걸까?
+    - 하나의 테이블을 테이블 별칭을 이용하여 2개의 테이블처럼
+    자신의 테이블을 자신의 테이블과 join하는 방식
+    
+예)회원테이블에서 회원번호 'T001' 회원이 보유한 마일리지보다 많은
+    마일리지를 보유한 회원을 조회하시오.
+    회원번호, 회원명, 마일리지
+select * from member;
+--하나만 이용하기 subquary만
+select mem_id, mem_name, mem_mileage
+    from member
+    where mem_mileage > (select mem_mileage
+                            from member
+                            where mem_id = 't001')
+    order by 3 desc;
+--sub쿼리 쓰기
+select mem_mileage
+    from member
+    where mem_id = 't001';
+
+--self_join
+select b.mem_id 회원번호, b.mem_name 회원명, b.mem_mileage 마일리지
+    from member a, member b --a: 'T001'회원, b: 전체회원
+    where lower(a.mem_id) = 't001'
+            and a.mem_mileage < b.mem_mileage;
+            
+--self_join + subquary
+select a.mem_id 회원번호, a.mem_name 회원명, a.mem_mileage 마일리지
+    from member as a, (select mem_mileage
+                        from member
+                        where mem_id = 't001') b --a: 전체회원 b: 'T001'회원의 마일리지
+    where a.mem_mileage > b.mem_mileage;
+    
+예)장바구니테이블에서 't001'회원에게 판매한 2005년 월별 판매현황을 조회하시오.
+select * from cart;
+select * from prod;
+select * from buyer;
+        회원명, 주민번호, 월, 구매액합계
+
+예)'마르죠'거래처와 같은 지역에 주소지를 두고 있는 거래처를 조회하시오
+    거래처코드, 거래처명, 주소, 담당자
+select * from buyer;
+-- self join
+    select b.buyer_id 거래처코드, 
+            b.buyer_name 거래처명, 
+            b.buyer_add1||'-'||b.buyer_add2 주소,
+            b.buyer_charger 담당자
+        from buyer a, buyer b
+        where a.buyer_name ='마르죠'
+            and substr(a.buyer_add1,1,2) = substr(b.buyer_add1,1,2);
+
+-- sub
+select substr(buyer_add1,1,2)
+    from buyer
+    where buyer_name ='마르죠';
+    
+    select buyer_id 거래처코드, 
+            buyer_name 거래처명, 
+            buyer_add1||'-'||buyer_add2 주소,
+            buyer_charger 담당자
+        from buyer 
+        where substr(buyer_add1,1,2) =(select substr(buyer_add1,1,2)
+                                        from buyer
+                                        where buyer_name ='마르죠');
+    
+   
+
+2020-12-03-01)외부조인 -- 종류가 부족할 때...
+ - 내부조인은 조인조건을 만족하지 않는 행(row)는 검색에서 제외
+ - 외부조인은 부족한 테이블에 null값으로 채워진 행을 삽입하여 조인 수행 
+ - 조인조건 기술 시 부족한 테이블에 포함된 컬럼뒤에 외부조인 연산자 
+   '(+)'를 사용 : 일반 외부조인
+ - 하나 이상의 조인 조건이 외부조인되는 경우 모든 조인 조건에 '(+)'연산자 사용
+ - 하나의 테이블이 동시에 확장되는 외부조인은 허용되지 않는다. 즉, a,b,c 테이블을
+   외부조인하는 경우 a를 기준으로 b를 외부조인하는 동시에 c를 기준으로 b를 
+   외부조인하지 못함 --부족한 테이블쪽에다가 (+)를 해준다.
+   ex) where a.Col = b.Col(+) -- 이 테이블에다가 null을 넣어서 확장해 주어라.
+            and c.col = b.col(+) -- 허용안됨 하나의 테이블에 서로다른테이블로 확장은 되지 않는다.    
+ - 일반조건이 추가된 외부조인은 일반외부조인을 사용하면 내부조인결과를 반환 -- ansi 외부조인 이나 subquery
+ (ansi 외부조인 사용 형식) --정확한 결과
+ select 컬럼list
+    from 테이블명[별칭]
+    full|right|left outer join 테이블명2[별칭] on(조인조건
+                        [and 일반조건1])
+    [full|right|left outer join 테이블명3[별칭] on(조인조건
+                        [and 일반조건2])]
+    [where 일반조건]
+        .full : 양쪽 테이블 모두 확장
+        .right : 테이블명2가 테이블명1보다 더 많은 종류의 자료가 있는 경우(테이블명1이 확장되는 경우)
+        .left : 테이블명1이 테이블명2보다 더 많은 종류의 자료가 있는 경우(테이블명2가 확장되는 경우)
+        .일반조건1, 일반조건2는 해당 테이블들에만 적용되는 조건
+        .where 절의 일반조건은 전체에 적용될 조건 --주의
+        
+예)모든 회원들에 대한 매출집계를 조회하시오
+    회원번호, 회원명, 매출액합계;
+select *from member;
+select distinct(cart_prod)from cart;
+select distinct(prod_id) from prod;
+
+select (a.cart_prod) a,
+       (b.prod_id) b
+    from cart a, prod b
+    where a.cart_prod(+) = b.prod_id;
+    
+-- oracle
+select a.mem_id 회원번호, a.mem_name 회원명, 
+        nvl(sum(b.CART_QTY*c.prod_price),0) 매출액합계
+    from member a, cart b, prod c
+    where a.mem_id = b.cart_member(+)
+        and b.CART_PROD = c.prod_id(+)
+    group by a.mem_id, a.mem_name
+    order by 1;
+-- ansi
+select a.mem_id 회원번호, a.mem_name 회원명, 
+        nvl(sum(b.CART_QTY*c.prod_price),0) 매출액합계
+    from member a
+            left outer join cart b on (a.mem_id = b.cart_member)
+            left outer join prod c on (b.CART_PROD = c.prod_id)
+    group by a.mem_id, a.mem_name
+    order by 1;
+    
+예) 2005년 3월 매입한 모든 상품별 매입집계를 조회하시오
+상품코드, 상품명, 매입수량, 매입금액
+(4월에 판매된 상품의 종류);
+select count(distinct buy_prod) 상품코드
+    from buyprod
+    where buy_date between '20050201' and '200502280';
+    
+(일반외부조인);
+select a.BUY_PROD 상품코드, b.prod_name 상품명, sum(a.buy_qty) 매입수량, sum(a.buy_qty*a.buy_cost)매입금액
+    from buyprod a, prod b
+    where a.BUY_PROD(+) = b.prod_id --29개
+--        and a.buy_date between '20050201' and '20050228' -- 안하면 74개...
+    group by a.BUY_PROD,b.prod_name;
+    
+--ansi
+select b.pROD_id 상품코드, b.prod_name 상품명, nvl(sum(a.buy_qty),0) 매입수량, nvl(sum(a.buy_qty*a.buy_cost),0)매입금액
+    from buyprod a
+        right outer join prod b on(a.BUY_PROD(+) = b.prod_id
+        and a.buy_date between '20050201' and '20050228') -- 안하면 74개...
+    group by b.pROD_id, b.prod_name
+    order by 1;
+
+
+--subquery
+select buy_prod id, buy_qty qty, buy_cost 
+    from buyprod
+    where buy_date between '20050201' and '20050228';
+select * from prod;
+
+select a.prod_id 상품코드, 
+        a.prod_name 상품명, 
+        nvl(sum(b.qty),0) 매입수량, 
+        nvl(sum(b.qty*b.buy_cost),0) 매입금액
+    from prod a, (select buy_prod id, 
+                        buy_qty qty, 
+                        buy_cost 
+                    from buyprod 
+                    where buy_date between '20050201' and '20050228') b
+    where b.id(+) = a.prod_id
+    group by a.prod_id, a.prod_name
+    order by 1;
+
+예제)모든 분류별 상품의 수를 조회하시오
+상품분류코드, 분류명, 상품의 수
+--ansi
+select *from lprod;
+select * from prod;
+select count(distinct prod_lgu) from prod;
+select a.lprod_gu 상품분류코드, 
+        a.lprod_nm 분류명, 
+        count(b.prod_lgu) "상품의 수"
+    from lprod a
+        left outer join prod b on(a.lprod_gu = b.prod_lgu)
+    group by a.lprod_gu, a.lprod_nm
+    order by 1;
+
+--oracle
+select a.lprod_gu 상품분류코드, 
+        a.lprod_nm 분류명, 
+        count(b.prod_lgu) "상품의 수" -- count()안에 null값이 없는 기본키를 쓰는게 제일 안전함.
+    from lprod a , prod b
+    where a.lprod_gu = b.prod_lgu(+)
+    group by a.lprod_gu, a.lprod_nm
+    order by 1;
+
+--subquery
+select count(*) "상품의 수"
+    from prod;
+select a.lprod_gu 상품분류코드, 
+        a.lprod_nm 분류명, 
+        nvl(b.cnt,0) "상품의 수"
+    from lprod a , (select count(*) cnt, prod_lgu
+                        from prod 
+                        group by prod_lgu) b
+    where a.lprod_gu = b.prod_lgu(+)
+    order by 1;
+    
+예제) 사원테이블에서 모든 부서별 평균급여를 계산하시오
+평균급여는 수숫점없이 출력하고, 부서코드 부서명, 평균급여를 출력할것
+select * from employees;
+select * from departments;
+--ansi
+select a.department_id 부서코드, 
+        nvl(a.DEPARTMENT_NAME,'사장') 부서명, 
+        round(avg(b.SALARY)) 평균급여
+    from departments a 
+        full outer join employees b on(a.department_id = b.department_id)
+    group by a.department_id, a.DEPARTMENT_NAME
+    order by 1;
+--oracle
+select a.department_id,0 부서코드, 
+        a.DEPARTMENT_NAME 부서명, 
+        round(avg(b.SALARY)) 평균급여
+    from departments a, employees b
+    where a.department_id = b.department_id(+)
+    group by a.department_id, a.DEPARTMENT_NAME
+    order by 1;
+--subquery
+select department_id did, round(avg(salary)) avg 
+    from employees
+    group by department_id;
+    
+select a.department_id 부서코드, 
+        a.DEPARTMENT_NAME 부서명, 
+        avg 평균급여
+    from departments a, (select department_id did, round(avg(salary)) avg 
+                            from employees
+                            group by department_id) b
+    where a.department_id = b.did(+)
+    order by 1;
+
+예제) 2005년 6월 제품별 입출고 현황을 조회하시오
+    상품코드, 상품명, 입고수량합계, 매입액합계, 출고수량합계, 매출액합계
+select * from prod;
+select * from buyprod;
+select * from cart;
+
+select c.prod_id 상품코드,
+        c.prod_name 상품명, 
+        nvl(sum(a.buy_qty),0) 입고수량합계, 
+        nvl(sum(a.buy_qty*c.prod_cost),0) 매입액합계, 
+        nvl(sum(b.cart_qty),0)출고수량합계,
+        nvl(sum(b.cart_qty*c.prod_price),0)매출액합계
+    from prod c
+        left outer join buyprod a on (c.prod_id = a.buy_prod
+            and a.BUY_DATE between '20050601' and '20050630')
+        left outer join cart b on(b.cart_prod = c.prod_id
+            and substr(b.cart_no,1,6)='200506')
+    group by c.prod_id, c.prod_name
+    order by 4 desc;
+
+2020-12-04-01)서브쿼리
+    - 쿼리 안에 포함된 또다른 쿼리를 서브쿼리라고 함
+    - 서브쿼리는 '( )'안에 기술
+    - 각 절에서 제일 먼저 실행됨
+    - 연산자와 같이 사용될 경우 연산자 오른쪽에 사용해야 함
+    (서브쿼리의 종류)
+    - 메인쿼리와 연관성 여부에 따라 : 연관성 있는 서브쿼리(Correlated Subquery)와 
+      비연관성 서브쿼리(Noncorrelated subquery)로 구분
+    - 사용되는 위치에 따라 : 일반서브쿼리(select 절에 사용), 인라인 서브쿼리(from 절에 사용),
+                          중첩서브쿼리(where 절에 사용)으로 구분
+    - 반환하는 행/열의 수에 따라 : 단일행/단일열, 다중행/단일열, 다중행/다중렬 등으로 구분되며
+      이는 사용하는 연산자에 의해 구별됨.
+      
+1. 연관성 없는 서브쿼리
+    - 메인쿼리와 서브쿼리사이에 조인이 발생되지 않는 서브쿼리
+    예) 사원테이블에서 평균급여보다 많은 급여를 받는 사원정보(사원번호, 사원명, 부서코드, 급여) 조회
+    (메인쿼리 : 사원번호, 사원명, 부서코드, 급여 조회)
+    
+    select employees_id as 사원번호,
+            emp_name as 사원명,
+            department_id as 부서코드,
+            salary as 급여 
+        from employees
+        where salary >=(평균급여);
+    
+    (서브쿼리 : 평균급여)
+    select avg(salary)
+    from employees;
+    
+   select employee_id as 사원번호,
+        emp_name as 사원명,
+        department_id as 부서코드,
+        salary as 급여 
+    from employees
+    where salary >= (select avg(salary)
+                    from employees);
+
+예)부모부서코드(parent_id)가 null인 부서에 소속된 사원정보를 조회하시오
+    사원번호, 사원명, 부서코드, 직책코드(job_id)
+    (메인쿼리 : 사원테이블에서 사원벙보를 조회)
+select employee_id 사원번호,
+        emp_name 사원명, 
+        department_id 부서코드, 
+        job_id 직책코드(job_id)
+    from employees
+    where department_id =부모부서코드(parent_id)가 null인 부서;
+    
+(서브쿼리 : 부서테이블에서 부모부서코드(parent_id)가 null인 부서코드)
+select department_id
+    from departments
+    where parent_id is null;
+
+부서테이블에서 부서코드 60(IT)의 부모부서코드를 null로 변경)
+    update departments
+        set parent_id = null
+        where department_id = 60;   
+
+(결합);
+select a.employee_id 사원번호,
+        a.emp_name 사원명, 
+        a.department_id 부서코드, 
+        a.job_id 직책코드
+    from employees a
+    where exists (select department_id
+                     from departments b
+                    where parent_id is null
+                    and a.department_id = b.DEPARTMENT_ID);
+
+2020-12-04-02)
+예)사원들의 평균급여보다 많은 급여를 받는 사원을 출력하시오
+    회원번호, 사원명, 급여
+    
+(where 절에 서브쿼리 사용);
+--한번한번 서브쿼리 사용함.. 느려짐
+select employee_id 사원번호,
+        emp_name 사원명,
+        salary 급여
+    from employees
+    where salary > (select avg(salary)
+                        from employees)
+    order by 3 desc;
+
+(from 절에 서브쿼리 사용);
+--한번만 서브쿼리 사용
+select employee_id 사원번호,
+        emp_name 사원명,
+        salary 급여
+    from employees a, (select avg(salary) sal
+                        from employees) b
+    where salary > b.sal
+    order by 3 desc;
+
+2020-12-08-01)
+예) 2005년 1~6월 모든 거래처별 매출현황을 조회하시오.
+    거래처코드, 거래처명, 매출액
+
+(일반 outer join);
+    select a.buyer_id 거래처코드, 
+            a.buyer_name 거래처명, 
+            sum(b.cart_qty*c.prod_price) 매출액
+        from buyer a,cart b, prod c
+        where b.cart_prod(+) = c.prod_id
+            and a.buyer_id = c.prod_buyer(+)
+            and substr(b.cart_no, 1,6) between '200501' and '200506'
+        group by a.buyer_id, a.buyer_name
+        order by 1;
+
+select * from buyer;
+select * from cart;
+(ansi outer)   ;    
+    select a.buyer_id 거래처코드, 
+            a.buyer_name 거래처명, 
+            sum(b.cart_qty*c.prod_price) 매출액
+        from buyer a 
+            left outer join prod c on(a.buyer_id = c.prod_buyer)
+            left outer join cart b on(c.prod_id = b.cart_prod
+            and substr(b.cart_no,1,6) between '200501' and '200506')
+    group by a.buyer_id, a.buyer_name
+    order by 1;
+    
+select * from buyer;
+select * from cart;
+select * from prod;
+(subquery);
+    select a.buyer_id 거래처코드,
+            a.buyer_name 거래처명,
+            b.amt 매출액
+        from buyer a,(select buyer_id bid,
+                            sum(cart_qty*prod_price) amt
+                        from buyer, cart, prod
+                        where buyer_id = prod_buyer
+                            and prod_id = cart_prod
+                            and substr(cart_no, 1, 6) between '200501' and '200506'
+                        group by buyer_id) b
+        where a.buyer_id=b.bid(+);
+        
+2005년 1~6월 거래처별 매출액-내부조인
+    select buyer_id bid,
+    sum(cart_qty*prod_price) amt
+    from buyer, cart, prod
+    where buyer_id = prod_buyer
+    and prod_id = cart_prod
+    and substr(cart_no, 1, 6) between '200501' and '200506'
+    group by buyer_id;
+    
+예) 2005년 모든 제품별 매입/매출을 조회하시오
+    alice 상품코드, 상품명, 매입수량, 매출수량, 매입금액, 매출금액
+select * from prod;
+select * from cart;
+select * from buyprod;
+
+select a.prod_id 상품코드, 
+        a.prod_name 상품명, 
+        b.bqty 매입수량, 
+        c.cqty 매출수량, 
+        b.bamt 매입금액, 
+        c.camt 매출금액
+    from prod a,(select buy_prod bprod,
+                        sum(buy_qty) bqty,
+                        sum(buy_qty *buy_cost) bamt
+                    from buyprod
+                    where buy_date between '20050101' and '20051231'
+                    group by buy_prod) b, (select cart_prod cprod, 
+                                                    sum(cart_qty) cqty,
+                                                    sum(cart_qty * prod_price) camt
+                                                from cart, prod
+                                                where cart_prod = prod_id
+                                                and cart_no like '2005%'
+                                                group by cart_prod) c
+    where a.prod_id = b.bprod(+)
+    and a.prod_id = c.cprod(+);
+
+(2005년 제품별 매입집계);
+select buy_prod bprod,
+        sum(buy_qty) bqty,
+        sum(buy_qty *buy_cost) bamt
+    from buyprod
+    where buy_date between '20050101' and '20051231'
+    group by buy_prod;
+
+(2005년 제품별 매출집계);
+select cart_prod cprod, 
+      sum(cart_qty) cqty,
+      sum(cart_qty * prod_price) camt
+    from cart, prod
+    where cart_prod = prod_id
+    and cart_no like '2005%'
+    group by cart_prod;
+    
+select a.prod_id 상품코드,
+        a.prod_name 상품명, 
+        c.bqty 매입수량, 
+        b.CART_QTY 매출수량, 
+        c.bcost 매입금액, 
+        sum(b.cart_qty *a.prod_price) 매출금액
+    from prod a,cart b,(select buy_qty bqty, 
+                          sum(buy_qty * buy_cost) bcost
+                         from buyprod
+                        group by buy_qty) c
+    group by a.prod_id, a.prod_name, c,bqty, b.cart_qty, c.bcost;
+                        
+    
+
+예) 사원테이블에서 부서별 가장 낮은 급여를 조회하고 누가 그 급여를 받는지 조회하시오
+    사원번호, 사원명, 부서번호, 부서명, 급여
+;
+select * from employees;
+select * from departments;
+(메인쿼리 : 사원테이블에서 사원번호, 사원명, 부서번호, 부서명, 급여 조회);
+select a.employee_id 사원번호, 
+        a.emp_name 사원명,
+        d.did 부서번호, 
+        d.dname 부서명, 
+        a.salary 급여
+    from employees a, (select b.department_id did, 
+                                c.department_name dname, 
+                                min(b.salary) msal
+                             from employees b, departments c
+                            where b.DEPARTMENT_ID = c.department_id
+                            group by b.department_id, c.department_name
+                            order by 1) d
+    where a.department_id = d.did
+        and a.salary = d.msal
+    order by 3;
+(서브쿼리 : 부서별 최소임금 );
+select b.department_id did, 
+    c.department_name dname,
+    min(b.salary) msal
+from employees b, departments c
+where b.DEPARTMENT_ID = c.department_id
+group by b.department_id, c.department_name
+order by 1;
+
+select c.msal
+    from employees b, (select department_id did, min(salary) msal
+                            from employees a
+                            group by department_id) c
+    where b.DEPARTMENT_ID = c.did;
+    
+select department_id, min(salary) 
+    from employees
+    group by department_id;
+    
+예)사원테이블과 직무테이블(jobs)을 사용하여 각 직무별 최소급여를 조회하고
+    해당 직무를 가지고 있는 사원 중 최소급여를 받는 사원정보를 조회하시오.
+    사원번호, 사원명, 직무코드, 직무명, 급여
+    (메인쿼리 : 사원번호, 사원명, 직무코드, 직무명, 급여)
+    ;
+select * from employees;
+select * from jobs;
+
+select  a.employee_id 사원번호,
+        a.emp_name 사원명,
+        a.job_id 직무코드,
+        b.job_title 직무명,
+        a.salary 급여
+    from employees a, jobs b
+    where a.job_id = b.job_id
+        and (a.job_id, a.salary) in (select job_id 직무, min(salary)최저급여
+            --2개의 컬럼과 2개의 컬럼 비교
+                                         from employees
+                                        group by job_id)
+    order by 3;
+        
+    (서브쿼리 : 직무별 최저급여(jobs테이블의 min_salary가 아님 이건 초봉임.);
+select job_id 직무, min(salary)최저급여
+    from employees
+    group by job_id;
+    
+
+예) 사원테이블에서 부서명이 '배송부'인 직원정보를 서브쿼리를 사용하여 조회
+    사원번호, 사원명, 부서명, 급여
+
+select * from employees;
+select * from departments;
+
+select department_id did, department_name d
+    from departments
+    where department_name = '배송부'; 
+    
+----- from절에 쓰기    
+select b.employee_id 사원번호, 
+        b.emp_name 사원명, 
+        c.d 부서명, 
+        b.salary 급여
+    from  employees b, (select department_id did, department_name d
+                                        from departments
+                                        where department_name = '배송부') c
+    where b.department_id = c.did;
+
+----- where절에 쓰기
+select a.department_id 사원번호, 
+        b.emp_name 사원명, 
+        a.DEPARTMENT_NAME 부서명, 
+        b.salary 급여
+    from departments a, employees b
+    where a.DEPARTMENT_id in (select department_id
+                                    from departments
+                                    where department_name = '배송부') 
+        and a.department_id = b.department_id;
+
+
+--실행결과 알기 
+explain plan for
+select *
+    from jobs j, employees e
+    where j.job_id = e.job_id;
+
+select *
+from table(dbms_xplan.display);
+
+--가장 많은 급여를 받는 사람의 employee_id 구하기
+select employee_id, Max(salary)
+from employees
+group by employee_id;
+
+--14
+select * from emp;
+--4
+select * from dept;
+
+제약조건
+0. Unique : 값에 중복을 허용하지 않음. 단 null은 가능
+1. Primary key == unique + not null
+	==> 중복방지 / 해당컬럼 값이 테이블에서 유일함을 보장, null 값이 들어갈 수 없다.
+2. fk(forein key) 참조 무결성
+3. check 제약
+not null
+
+--전체적인 제약조건 보기
+select * 
+from user_constraints
+where table_name in ('EMP', 'DEPT');
+
+--primary key 보기
+select *
+from user_cons_columns
+--where constraint_name = upper('pk_lprod');
+where constraint_name = upper('pk_buyer');
+
+--오라클에서 ()가 없는 함수는 ()를 뺀다. ex) sysdate
+사원의 부서별 급여(sal)별 순위 구하기
+select * from emp;
+select 
+
+분석함수 / window 함수 -- 둘다 같은말이다.
+select window_funtion([arg])
+over ([partition by columns] [order by columns] [windowing])
+--over가 나오면 분석함수다!!
+
+영역설정
+partition by 컬럼코드
+
+순서설정
+order by 컬럼코드 [desc|asc]
+
+범위설정(windowing)
+
+
+
+2020-12-09 분석함수
+분석함수 : 행간 연산 지원을 해주는 함수
+select 분석함수이름([인자]) over ( 영역설정 순서설정 범위설정)
+from .....
+영역설정 : PARTITION BY 컬럼 
+순서설정 : ORDER BY 컬럼
+범위설정 : PARTITION 내에서 특정 행까지 범위를 지정...(나중)
+
+하려고 하는 것 : emp 테이블을 이용하여 부서번호 별로 급여 랭킹을 계산
+                (급여 랭크 기준 : sal값이 높은 사람이 랭크가 높은 것으로 계산)
+                
+영역설정 : deptno
+순서설정 : sal DESC;
+
+SELECT ename, sal, deptno,
+    --rank는 공동 1위 다음에 3위
+    RANK()OVER (PARTITION BY deptno ORDER BY SAL DESC) sal_rank,
+    --dense_rank는 공동1위 후에 2위로 됨.
+    DENSE_RANK()OVER (PARTITION BY deptno ORDER BY SAL DESC) sal_denserank, 
+    --row_number는 공동순위 자체가 없다. ROWNUM과 다른점은 그냥 PARTITION의 차이.
+    ROW_NUMBER()OVER (PARTITION BY deptno ORDER BY SAL DESC) sal_row_number
+FROM emp;
+
+-- ROWNUM 번호부여하기. 
+select emp.*, ROWNUM
+FROM emp;
+
+RANK()OVER (PARTITION BY deptno ORDER BY SAL DESC) SAL_RANK
+PARTITION BY deptno : 
+ORDER BY sal : 
+RANK() : 
+
+실습1
+사원 전체 급여 순위 rank, dense_rank, row_number를 이용하여
+단, 급여가 동일할 경우 사번이 빠른 사람이 높은 순위가 되도록.
+
+SELECT empno, ename, sal, deptno, 
+    RANK() OVER(ORDER BY sal desc, empno asc) sal_rank,
+    dense_RANK() OVER(ORDER BY sal desc,empno ) dense_rank,
+    row_number() OVER(ORDER BY sal desc) row_number
+FROM emp;
+
+부서별 사원수
+10, 3
+20, 5
+30, 6
+select deptno, count(*)
+from emp
+group by deptno;
+
+select count(*)
+from emp;
+
+select * 
+from emp
+order by job, sal, hiredate;
+
+실습2
+기존의 배운 내용을 활용하여,
+모든 사원에 대해 사원번호, 사원이름, 해당사원이 속한 부서의 사원수를 조회하는 쿼리를 작성하세요.
+--분석함수
+select empno, ename, deptno, 
+    count(*) OVER(partition by deptno) cnt
+from emp;
+
+--분석함수 안쓰고 from_subquery join이라 부른다.
+--단점 테이블 두개를 읽는다.
+select a.empno, a.ename, a.deptno, cnt
+from emp a, (select deptno, count(*) cnt
+            from emp
+            group by deptno) b
+where a.deptno = b.deptno;
+
+--select 안에 있으면 스칼라 서브쿼리라 부른다.
+--단점 행을 실행할 때마다 subquery를 실행한다.
+10 : SELECT COUNT(*) 
+     FROM emp 
+     WHERE deptno = 10;
+20 : SELECT COUNT(*)
+     FROM EMP
+     WHERE DEPTNO = 20;
+select a.empno, a.ename, a.deptno, 
+    (select count(*)
+        from emp
+        where deptno = a.deptno)cnt
+from emp a
+order by deptno;
+
+WHERE : 조회되는 행을 제한, WHERE절에 기술한 조건이 해당행을 대상으로 참(TREU)으로 판단 될 경우 조회
+
+SELECT *
+FROM emp
+WHERE 1=1;
+
+--부서별 부서원수를 4번째 칼럼으로 조회
+집계함수 : count, sum, avg, max, min
+--효율적이다. table을 한번만 쓰니까!
+SELECT empno, ename, deptno,
+    COUNT(*) OVER(PARTITION BY deptno) cnt
+FROM emp
+ORDER BY deptno desc;
+
+실습 2
+
+window function을 이용하여 모든 사원에 대해 사원번호, 사원이름, 본인급여, 부서번호와 해당 사원이 속한 부서의 급여 평균을
+조회하는 쿼리를 작성하세요.(급여 평균은 소수점 둘째 자리까지 구한다)
+
+SELECT empno 사원번호, ename 사원이름, sal 본인급여, deptno 부서번호, 
+       round(AVG(SAL) OVER ( PARTITION BY deptno ), 2 ) sal_avg,
+       TO_CHAR(AVG(SAL) OVER ( PARTITION BY deptno ), 'fm9999.00' ) sal_avg1
+FROM emp;
+
+실습 3
+window function을 이용하여 모든 사원에 대해 사원번호, 사원이름, 본인 급여, 부서의 가장 높은 급여를 조회하는 쿼리를 작성하시오
+
+SELECT empno 사원번호, ename 사원이름, sal 본인급여, 
+        MAX(sal) OVER (PARTITION BY deptno) max_sal,
+        MIN(sal) OVER (PARTITION BY deptno) min_sal
+FROM emp;
+
+과제 : 위의 sql을 분석함수를 사용하지 않고 작성하기
+--1.
+SELECT a.empno 사원번호, a.ename 사원이름, a.sal 본인급여, max, min
+    from emp a, (SELECT deptno a, max(sal) max, min(sal) min
+                from emp
+                group by deptno) b
+    where a.deptno = b.a
+    order by 3;
+--2.
+select a.empno 사원번호, a.ename 사원이름, a.sal 본인급여, 
+        (SELECT max(sal) max
+             from emp
+             where deptno = a.deptno) max, 
+        (SELECT min(sal) min
+             from emp
+             where deptno = a.deptno) min
+from emp a
+order by 3;
+select * from emp;
+
+    
+2020-12-10
+
+SELECT empno, ename, deptno
+FROM emp;
+
+SELECT *
+FROM dept;
+
+--cross join 가능한 모든 조합을 다 한다.
+SELECT *
+FROM emp, dept;
+--14개, 4개
+--56개의 정보가 다 나온다.
+
+SELECT *
+FROM emp, dept
+WHERE emp.deptno != dept.deptno;
+--14개, 3개
+--42개의 정보가 나온다.
+
+--페이징쿼리(페이징하기)
+
+복습
+분석함수
+1. 문법 : OVER, PRATITION BY, ORDER BY,
+   함수 : RANK, DENSE_RANK, ROW_NUMBER
+         집계함수 - SUM, AVG, MAX, MIN, COUNT
+
+
+(그룹 내에서 행 순서)
+LAG(col) 
+ - 파티션별 윈도우에서 이전 행의 컬럼 값
+LEAD(col)
+ - 파티션별 윈도우에서 이후 행의 컬럼 값
+==> 이전 이후 행의 특정 컬럼을 참조하는 함수
+
+사원번호, 사원이름, 입사일자, 급여, 자신보다 급여 순위가 한단계 낮은 사람의 급여
+급여 순위 : 1. 급여가 높은 사람
+            2. 급여가 같을 경우 입사일자가 빠른 사람;
+SELECT empno, ename, hiredate, sal,
+    LEAD(sal) OVER(ORDER BY sal DESC, hiredate ASC ),
+    --(col, 비교할 몇번 이후 row.
+    LEAD(sal,3) OVER(ORDER BY sal DESC, hiredate ASC )
+FROM emp
+ORDER BY sal DESC, hiredate ASC;
+
+실습 5
+window function을 이용하여 모든 사원에 대해 사원번호, 사원이름, 입사일자, 급여,
+전체 사원중 급여 순위가 1단계 높은 사람의 급여를 조회하는 쿼리를 작성 하세요(급여가 같을 경우 입사일이 빠른 사람이 높은 순위)
+SELECT * FROM emp;
+SELECT empno, ename, hiredate, sal,
+    LAG(sal) OVER (ORDER BY sal DESC, hiredate asc)
+FROM emp
+ORDER BY sal desc, hiredate asc;
+
+select emp.*, rownum from emp;
+
+select b.empno, b.ename, b.hiredate,a.sal, rownum
+from emp b , (select ename, sal
+                        from emp
+                        order by sal desc) c, (select d.empno, d.ename, d.hiredate,c.sal, rownum
+                                            from emp d , (select ename, sal
+                                                    from emp
+                                                    order by sal desc) e
+                where d.ename = c.ename)
+where b.ename = a.ename;
+
+select b.empno, b.ename, b.hiredate,a.sal sal1, rownum
+from emp b ,(select ename, sal
+                        from emp
+                        order by sal desc) a
+where b.ename = a.ename;
+
+select g.*, h.sal1, j.sal1
+from emp g,
+    (select b.empno, b.ename, b.hiredate,a.sal sal1, rownum aa
+    from emp b ,(select ename, sal
+                            from emp
+                            order by sal desc) a
+    where b.ename = a.ename) h,
+    (select d.empno, d.ename, d.hiredate,c.sal sal1, rownum bb
+    from emp d ,(select ename, sal
+                            from emp
+                            order by sal desc) c
+    where d.ename = c.ename) j
+where h.aa = j.bb-1;
+
+        
+실습 5_1
+SELECT * FROM emp;
+
+SELECT a.*, b.sal, a.sal
+FROM (select empno, ename, hiredate, sal,
+        row_number() over(order by sal desc, hiredate asc) rn
+        from emp) a,
+     (select empno, ename, hiredate, sal,
+        row_number() over(order by sal desc, hiredate asc) rn
+        from emp) b
+where a.rn  = b.rn-1;
+
+SELECT a.empno, a.ename, a.hiredate, a.sal, b.sal
+FROM (select empno, ename, hiredate, sal,
+        row_number() over(order by sal desc, hiredate asc) rn
+        from emp) a left outer join
+     (select empno, ename, hiredate, sal,
+        row_number() over(order by sal desc, hiredate asc) rn
+        from emp) b on (a.rn  = b.rn+1)
+ORDER BY a.rn;
+a가 2위이면 b의 1위와 연결
+a가 3위이면 b의 2위와 연결
+a가 n위이면 b의 n-1위와 연결
+a.rn -1 = b.rn
+
+window function을 이용하여 모든 사원에 대해 사원번호, 사원이름, 입사일자, 직군(job), 급여 정보와
+담당업무(job) 별 급여 순위가 1단계 높은 사람의 급여를 조회하는 쿼리를 작성하세요
+(급여가 같을 경우 입사일이 빠른 사람이 높은순위);
+SELECT * FROM emp;
+SELECT empno, ename, hiredate, job, sal,
+    LAG(sal) OVER(PARTITION BY job ORDER BY sal desc)
+FROM EMP
+ORDER BY job, sal desc, hiredate asc;
+
+
+메타 인지 : 내가 무엇을 모르는지 아는 상황
+select empno, ename, hiredate, job, sal, 
+    ROW_NUMBER() OVER(PARTITION BY job ORDER BY sal desc)
+FROM emp;
+
+메타 인지 : 내가 무엇을 모르는지 아는 상황
+--나 앞으로 나 자신까지 order by
+SELECT empno, ename, sal, 
+    SUM(sal) OVER (ORDER BY sal)
+FROM emp;
+
+그룹 내 행 순서
+
+--행간 계산 이건 앞 모든 행
+window 함수에 대상이 되는 행을 지정
+UNBOUNDED PRECEDING
+    현재 행기준 모든 이전행
+CURRENT ROW
+    현재행
+UNBOUNDED FOLLOWING
+    현재 행 기준 모든 이후행
+
+메타 인지 : 내가 무엇을 모르는지 아는 상황
+--나 앞으로 나 자신까지 order by
+
+SELECT empno, ename, sal, 
+    SUM(sal) OVER (ORDER BY sal)
+FROM emp;
+
+SELECT empno, ename, sal, -- row
+       SUM(sal) OVER (ORDER BY sal ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+FROM emp;
+
+-- 행간 계산하기!! 요건 지정해 줄 수 있다.
+windowing
+    - window 함수에 대상이 되는 행을 지정
+    n PRECEDING
+    - 현재 행 기준 이전N행
+    n FOLLOWING
+    - 현재 행 기준 이후N행
+    
+실습 7
+사원번호, 사원이름, 부서번호, 급여 정보를 부서별로 급여, 사원번호
+오름차순으로 정렬 햇을 때, 자신의 급여와 선행하는 사원들의 급여 합을
+조회하는 쿼리를 작성하시오(WINDOW 함수 사용)
+SELECT * FROM emp;
+SELECT empno, ename, deptno, sal,
+    SUM(sal) OVER(PARTITION BY deptno ORDER BY sal, empno 
+--                    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                 ) c_sum
+FROM emp;
+
+범위설정 WINDOWING - DEFAULT
+RANGE UNBOUNDED PRECEDING
+--두개 같은 표현이다.
+RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+
+-- RANGE와 ROWS의 차이점.
+분석합수에서 ORDER BY 절 이후에 WINDOWING 절을 생략할 경우 다음의WINDOWING이 기본으로 적용된다.
+RANGE UNBOUNDED PRECEDING
+== RANGE BETWEEN INBOUNDED PRECEDING AND CURRENT ROW
+ROWS: 물리적인 행의 단위 (동일한 값을 제외하고 자기 자신만을)
+RANGE : 논리적인 행의 단위 (동일한 값을 포함하고 자기 자신만을) --동일한 값을 들고 있으면 하나의 행으로 여긴다. 논리적으로 맞음.
+
+SELECT empno, ename, sal,
+    SUM(sal) OVER (ORDER BY sal ROWS UNBOUNDED PRECEDING) rows_sum,
+    SUM(sal) OVER (ORDER BY sal RANGE UNBOUNDED PRECEDING) range_sum,
+    SUM(sal) OVER (ORDER BY sal) default_sum
+FROM emp;
+
+
+ROWNUM : select 순서대로 반환된 행의 번호를 1부터 부여해주는 함수
+특징 : WHERE절에서 사용 가능
+      행을 건너뛰는 형태로 사용 불가
+      ==> ROWNUM이 1부터 순차적으로 사용된 경우에만 사용가능
+      WHERE ROWNUM = 1; (O)
+      WHERE ROWNUM = 2; (X) //1을 건너 뛰었기 때문에 정상적으로 조회되지 않음.
+      WHERE ROWNUM < 5; (0) 1~4
+      WHERE ROWNUM > 5; (X) 1~4를 읽지 않고 건너 뜀
+      
+        
+SELECT ROWNUM, empno, ename
+FROM emp
+WHERE ROWNUM =1;
+
+SELECT ROWNUM, empno, ename
+FROM emp
+WHERE ROWNUM =2;
+
+SELECT ROWNUM, empno, ename
+FROM emp
+WHERE ROWNUM < 5;
+
+SELECT ROWNUM, empno, ename
+FROM emp
+WHERE ROWNUM >5;
+
+SELECT empno, ename, hiredate
+FROM emp
+ORDER BY hiredate DESC;
+
+--페이지 사이즈가 10일 때 
+1 PAGE : 1~10
+2 PAGE : 11~20
+N PAGE : (N-1) * 10 + 1 ~ N*10
+--N PAGE : (:page - 1) * :pageSize + 1 ~ :page * :pageSize
+
+--페이즈 사이즈가 5일 때
+1 PAGE : 1~5
+2 PAGE : 6~10
+3 PAGE : 11~15
+
+SELECT ROWNUM, a.*
+ FROM 
+    (SELECT empno, ename, hiredate
+     FROM emp
+     ORDER BY hiredate DESC) a 
+WHERE ROWNUM BETWEEN 1 AND 10; -- 1PAGE
+     
+--오라클은 이렇게 인라인뷰를 이용해서 ROWNUM을 해야한다.
+SELECT *
+FROM
+    (SELECT ROWNUM rn, a.*
+     FROM -- 여기만 바꾸면 된다.
+        (SELECT empno, ename, hiredate
+         FROM emp
+         ORDER BY hiredate DESC) a )
+WHERE rn BETWEEN 11 AND 20; -- 2PAGE
+
+--바인딩 
+SELECT *
+FROM
+    (SELECT ROWNUM rn, a.*
+     FROM -- 여기만 바꾸면 된다.
+        (SELECT empno, ename, hiredate
+         FROM emp
+         ORDER BY hiredate DESC) a )
+WHERE rn BETWEEN :st AND :ed; -- 2PAGE
+
+-- 페이징 로직!
+SELECT *
+FROM
+    (SELECT ROWNUM rn, a.*
+     FROM -- 여기만 바꾸면 된다.
+        (SELECT empno, ename, hiredate
+         FROM emp
+         ORDER BY hiredate DESC) a )
+WHERE rn BETWEEN (:page - 1) * :pageSize + 1 AND :page * :pageSize ; -- 페이징 로직
+-- 값 줄 때 엔터가 들어가면 안된다!!
+
+2020-12-11
+--member 테이블에서 두개의 컬럼만 조회 : mem_id, mem_name
+--이름(mem_name)컬럼 오름차순으로 조회된 결과를 페이징 처리하는 쿼리를 작성하세요.
+
+SELECT *
+FROM
+    (SELECT ROWNUM rn, A.*
+     FROM 
+        (SELECT a.movie_name, a.movie_opendate, b.type_name, a.movie_viewcnt
+         FROM movie a, type b
+         WHERE a.type_lgu = b.type_lgu
+            AND movie_opendate is not null
+         ORDER BY movie_viewcnt desc) A )
+WHERE rn BETWEEN (:page -1) * :pageSize + 1 AND (:page * :pageSize);
+
+데이터 정렬(가상컬럼 ROWNUM)
+
+ROWNUM 용도
+    - 페이징 처리(row_1~3)
+    - 다른 행과 구분되는 유일한 가상의 컬럼 생성/활용
+    - 튜닝시
+        inline view 안에서 rownum 사용 시 view merging 이 일어나지 않는다.
+
+SQL 실행 절차
+구문분석, 실행절차 ==> 바인드 ==>
+--오라클 디벨로퍼를 하기 위해선 오라클 dbms가 실행되어야한다(검색창에 오라클service가 실행된다)
+1.구문분석, 실행계획
+    공유 풀에서 동일한 실행 계획이 있는 지 검색(커서 공유)
+    -SQL Syntax 검사
+    -Semantic 검사
+    Data Dictionary
+    -참조 객체 검사
+    - 스키마, 롤, 구너한
+    실행 계획 접수
+
+동일한 SQL이라는 것은 문자열이 완벅하게 동일해야함
+공백, 대소문자도 완벽하게 일치 해야 동일한 SQL로 인식
+SELECT  /*DDIT*/ mem_id, mem_name
+FROM member
+WHERE mem_id = :id;
+
+실행계획 확인 방법
+1. 실행할 SQL 위에 EXPLAIN PLAN FOR 을 작성하고 실행
+2. 실행 계획 조회
+    SELECT *--함수의 결과값을 TABLE로 알려주는 쿼리
+    FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+EXPLAIN PLAN FOR
+SELECT *
+FROM member;
+
+SELECT *
+FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+Plan hash value: 3441279308
+ 실행계획 해석 방법
+ 1. 위에서 아래로
+ 2. 단, 자식 노드(들여쓰기)가 있을 경우 자식부터
+ 1-0 맞다.
+ 0-1
+----------------------------------------------------------------------------
+| Id  | Operation         | Name   | Rows  | Bytes | Cost (%CPU)| Time     |
+----------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |        |    24 |  7152 |     2   (0)| 00:00:01 |
+|   1 |  TABLE ACCESS FULL| MEMBER |    24 |  7152 |     2   (0)| 00:00:01 |
+----------------------------------------------------------------------------
+ 
+Note
+-----
+   - dynamic sampling used for this statement (level=2)
+
+    
+EXPLAIN PLAN FOR
+SELECT *
+FROM member
+WHERE mem_id = 'a001';
+
+SELECT *
+FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+-----------------------------------------------------------------------------------------
+| Id  | Operation                   | Name      | Rows  | Bytes | Cost (%CPU)| Time     |
+-----------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT            |           |     1 |   298 |     1   (0)| 00:00:01 |
+|   1 |  TABLE ACCESS BY   ROWID| MEMBER    |     1 |   298 |     1   (0)| 00:00:01 |
+|*  2 |   INDEX UNIQUE SCAN         | PK_MEM_ID |     1 |       |     1   (0)| 00:00:01 |
+-----------------------------------------------------------------------------------------
+ *는 Pridicate라고 함. 바로 밑에 설명해줌.
+Predicate Information (identified by operation id):
+---------------------------------------------------
+ 
+   2 - access("MEM_ID"='a001')
+   
+   
+--primary key에 함께 생성되는 index...rowid
+rowid --해당 행에 접근할 수 있는 주소를 불러오는
+SELECT ROWID, mem_id
+FROM MEMBER;
+where mem_id = 'a001';
+
+EXPLAIN PLAN FOR
+SELECT mem_id
+FROM MEMBER
+WHERE mem_id ='a001';
+
+SELECT *
+FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+-----전체를 안찾고 컬럼명을 주어줬기 때문에 테이블에 접속해서 인덱스로 찾을 필요가 없다.
+-------------------------------------------------------------------------------
+| Id  | Operation         | Name      | Rows  | Bytes | Cost (%CPU)| Time     |
+-------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |           |     1 |     9 |     1   (0)| 00:00:01 |
+|*  1 |  INDEX UNIQUE SCAN| PK_MEM_ID |     1 |     9 |     1   (0)| 00:00:01 |
+-------------------------------------------------------------------------------
+ 
+Predicate Information (identified by operation id):
+---------------------------------------------------
+ 
+   1 - access("MEM_ID"='a001')
+   
+EXPLAIN PLAN FOR
+SELECT *
+FROM prod, lprod
+WHERE prod.prod_lgu = lprod_gu;
+
+SELECT *
+FROM TABLE(DBMS_XPLAN.DISPLAY);
+ 
+----------------------------------------------------------------------------
+| Id  | Operation          | Name  | Rows  | Bytes | Cost (%CPU)| Time     |
+----------------------------------------------------------------------------
+|   0 | SELECT STATEMENT   |       |    74 |   175K|     6  (17)| 00:00:01 |
+|*  1 |  HASH JOIN         |       |    74 |   175K|     6  (17)| 00:00:01 |
+|   2 |   TABLE ACCESS FULL| LPROD |     9 |   369 |     2   (0)| 00:00:01 |
+|   3 |   TABLE ACCESS FULL| PROD  |    74 |   172K|     3   (0)| 00:00:01 |
+----------------------------------------------------------------------------
+2-3-1-0
+Predicate Information (identified by operation id):
+---------------------------------------------------
+ 
+   1 - access("PROD"."PROD_LGU"="LPROD_GU")
+ 
+Note
+-----
+   - dynamic sampling used for this statement (level=2)
+
+
+ --오라클에서 관리하는 SQL v&SQL
+SELECT *
+FROM V$SQL
+WHERE SQL_TEXT LIKE '%DDIT%';
+
+
+
+PL/SQL
+- Procedural Language /SQL --절차적 언어
+- 오라클에서 제공하는 프로그래밍 언어
+- 집합적 성향이 강한 SQL에 일반 프로그래밍 언어 요소를 추가
+    SQL에서 지원하지 않는 반복문, 조건문을 지원
+- 데이터를 절차적으로 처리하는데 그 목적
+
+java
+변수타입 변수명 = 변수값;
+pl/sql
+변수명 변수타입 := 변수값;
+
+기본구조
+ Declare(선언부) --여기서만 선언 가능.
+    - 변수, 상수를 선언
+    - 생략가능
+ Begin(실행부) --여기만 있으면 실행 가능.
+    - 제어문, 반복문 등의 로직 실행
+ Exception(예외 처리부)
+    - 실행 도중 에러 발생을 catch, 후속조치
+    - 생략가능
+    
+연산자
+대입연산자 : :=
+
+PL/SQL
+구조 : DECLARE (생략가능) - 변수, 상수 등을 선언
+      BEGIN(생략 불가) - 비지니스 로직(SQL, IF, LOOP)
+      EXCEPTION(생략가능) - 예외처리(JAVA-TRY,CATCH)
+      
+  1. 10번 부서의 DNAME, LOC 컬럼 두개를 변수에 담는다.
+  2. 두개의 변수값을 출력(System.out.println)
+  
+SELECT *
+FROM dept;
+
+--describe 
+DESC dept;
+
+변수 선언 : 변수명 변수타입;
+pl/sql : 변수명 작명시 V_xxx 접두어 사용
+
+--프린트 하려면 반드시 이거 해야함.
+SET SERVEROUTPUT ON;
+-- 익명블록! Anonymous block
+DECLARE
+     V_DNAME VARCHAR2(14); --딱 하나의 값만 저장가능! 여러개 저장하려면 배열이나 리스트!
+     V_LOC VARCHAR2(13);
+BEGIN
+---------------------변수에 값 담기 INTO 변수명1, 변수명2
+    SELECT DNAME, LOC INTO V_DNAME, V_LOC
+    FROM dept
+    WHERE deptno = 10;
+     --디버깅 목적. SYSOUT과 같은 효과
+    --  System.out.println(v_dname + " / " + v_log);
+    DBMS_OUTPUT.PUT_LINE(V_DNAME || '/ ' || V_LOC);
+END;
+/
+--/가 ;과 같은 역할을 한다.
+
+
+-- 여기 자체에서만 쓸 수 있다.
+Anonymous block
+--등록해서 쓰기
+procedure
+ - return 필요 없다.
+function
+ - return 필수
+
+
+AOP(Aspect Oriented Programing)
+OOP(Object Oriented Programing)
+
+view는 쿼리이다
+- view는 인라인뷰다.
+
+참조변수 : 특정테이블의 컬러므이 데이터 타입을 자동으로 참조 ==> 컬럼의 데이터 타입이 바뀌어도
+        PL/SQL 블록의 변수 선언부를 수정할 필요가 없어짐 : 유지보수에 유리
+        테이블명.컬럼명%TYPE;
+        
+DECLARE
+     V_DNAME dept.dname%TYPE;--<==VARCHAR2(14);
+     V_LOC dept.loc%TYPE;--<==VARCHAR2(13);
+BEGIN
+---------------------변수에 값 담기 INTO 변수명1, 변수명2
+    SELECT DNAME, LOC INTO V_DNAME, V_LOC
+    FROM dept
+    WHERE deptno = 10;
+     --디버깅 목적. SYSOUT과 같은 효과
+    --  System.out.println(v_dname + " / " + v_log);
+    DBMS_OUTPUT.PUT_LINE(V_DNAME || '/ ' || V_LOC);
+END;
+/
+
+pl/sql block 구분
+1. 익명 블럭 : inline-view
+2. procedure : 오라클 서버에 저장한 pl/sql 블럭, 리턴값은 없다.
+3. function : 오라클 서버에 저장한 pl/sql 블럭, 리턴값이 있다.
+
+오라클 객체
+CREATE 오라클객체타입 객체이름....
+CREATE TABLE 테이블명
+CREATE [OR REPLACE] VIEW 뷰이름 --OR REPLACE 이름이 같으면 변경하라.
+
+CREATE /*OR REPLACE */PROCEDURE printdept IS 
+    --선언부(DECLARE)
+    v_dname dept.dname%TYPE;
+    v_loc dept.loc%TYPE;
+BEGIN
+    SELECT dname, loc INTO v_dname, v_loc
+    FROM dept
+    WHERE deptno = 10;
+    DBMS_OUTPUT.PUT_LINE(v_dname || ' / ' || v_loc); 
+END;
+/
+
+프로시져 실행하기!;
+EXEC 프로시져 명
+EXEC printdept;
+
+현재 프로시져는 10번 부서의 정보만 조회가 되게끔 코드가 구성됨(hard coding)
+procedure 인자로 조회하고 싶은 부서번호를 받도록 수정하여 코드를 유연하게 만들어 보자
+
+프로시져를 생성할 때 인자를 프로시져명 뒤에 선언할 수 있음
+인자는 메소드와 마찬가지로 여러개를 받을 수 있음
+
+수업시간에는 프로시져에서 인자 이름을 P_XXX 접두어를 사용하기로 합시다.
+
+CREATE OR REPLACE PROCEDURE [(인자명 인자 타입)]
+CREATE OR REPLACE PROCEDURE printdept(p_deptno dept.deptno%TYPE) IS 
+    --선언부(DECLARE)
+    v_dname dept.dname%TYPE;
+    v_loc dept.loc%TYPE;
+BEGIN
+    SELECT dname, loc INTO v_dname, v_loc
+    FROM dept
+    WHERE deptno = p_deptno; -- 파라미터 값을 받아서 유용성을 높이자! 10;
+    DBMS_OUTPUT.PUT_LINE(v_dname || ' / ' || v_loc); 
+END;
+/
+
+EXEC printdept(50);
+
+실습 (procedure 생성 실습 pro_1)
+printemp procedure 생성
+param : empno
+logic : empno에 해당하는 사원의 정보를 조회하여 사원이름, 부서이름을 화면에 출력
+
+select * from emp;
+select * from dept;
+CREATE OR REPLACE PROCEDURE printempno(p_empno emp.empno%TYPE) IS
+    V_empno emp.empno%TYPE
+    V_dname dept.dname
+
+BEGIN
+
+END;
+/
+
+select * from emp;
+select * from dept;
+SELECT a.ename, b.DEPTNO
+    from emp a, dept b
+    where a.deptno = b.DEPTNO
+        AND a.empno = 7369;
+        
+        
+CREATE OR REPLACE PROCEDURE printempno(p_empno emp.empno%TYPE) IS
+    V_ename emp.ename%TYPE;
+    V_dname dept.dname%TYPE;
+BEGIN
+    SELECT a.ename, b.dname INTO V_ename, V_dname
+    FROM emp a, dept b
+    WHERE a.deptno = b.deptno
+        AND a.empno = p_empno;
+    DBMS_OUTPUT.PUT_LINE(V_ename || ' / ' || V_dname);
+END;
+/
+
+
+EXEC printempno(7369);
+rollback;
+
+2020-12-14 PL/SQL 
+------실습 2
+registdept_test procedure 생성
+param : deptno, dname, loc
+logic : 입력받은 부서 정보를 dept_test 테이블에 신규 입력
+exec registdept_test (99, 'ddit', 'daejeon');
+dept_test 테이블에 정상적으로 입력 되었는지 확인(SQL-눈으로)
+
+SELECT deptno, dname, loc
+FROM dept;
+SET SERVEROUTPUT ON;
+
+-- 테이블 복사하기(나만의 수정 공간)
+CTAS : CHECK 제약을 제외한 나머지 제약조건들은 적용되지 않는다.
+CREATE TABLE dept_test AS
+SELECT *
+FROM dept;
+where 1=2; --테이블 형태만 가지고 오기(값은 가지고오지말고)
+
+rollback;
+
+--데이터를 잘못 넣었을 경우 
+INSERT INTO dept_test(deptno,dname, loc)
+    VALUES (99, 'ddit', 'daejeon');
+select * from dept_test;
+select rowid, dept_test.* from dept_test;
+--데이터를 삭제하기!!
+delete dept_test
+where rowid in ('AAAFCOAABAAALkCAAA','AAAFCOAABAAALkCAAB');
+
+
+CREATE OR REPLACE PROCEDURE registdept_test(p_deptno dept_test.deptno%TYPE,
+                                            p_dname dept_test.dname%TYPE,
+                                            p_loc dept_test.loc%TYPE) IS
+BEGIN
+    INSERT INTO dept_test(deptno,dname, loc)
+    VALUES (p_deptno, p_dname, p_loc);
+    COMMIT;
+END;
+/
+EXEC registdept_test(98, 'DDIT', '대전');
+
+SELECT *
+FROM dept_test;
+
+---- 실습문제 3
+UPDATEdept_test procedure 생성
+param : deptno, dname, loc
+logic : 입력받은 부서 정보를 dept_test 테이블에 정보 수정
+exec UPDATEdept_test (99, 'ddit', 'daejeon');
+dept_test 테이블에 정상적으로 입력 되었는지 확인(SQL-눈으로)
+
+UPDATE dept_test
+SET dname = 'ddit', loc = 'daejeon'
+WHERE deptno = 98;
+
+CREATE OR REPLACE PROCEDURE UPDATEdept_test(p_deptno dept_test.deptno%TYPE,
+                                            p_dname dept_test.dname%TYPE,
+                                            p_loc dept_test.loc%TYPE)IS
+BEGIN
+    UPDATE dept_test
+    SET dname = p_dname, loc = p_loc
+    WHERE deptno = p_deptno;
+END;
+/
+
+EXEC UPDATEdept_test(98, 'aa', 'aa');
+CREATE OR REPLACE PROCEDURE PRINTdept_test(p_deptno dept_test.deptno%TYPE) IS
+V_deptno dept_test.deptno%TYPE;
+V_dname dept_test.dname%TYPE;
+V_loc dept_test.loc%TYPE;
+BEGIN
+    SELECT deptno, dname, loc INTO V_deptno, V_dname, V_loc
+    FROM dept_test
+    WHERE deptno = p_deptno;
+    DBMS_OUTPUT.PUT_LINE(V_deptno || ' / ' || V_dname || ' / ' || V_loc);
+END;
+/
+EXEC PRINTdept_test(98);   
+
+----[배열]
+PL/SQL 복합 변수
+점(컬럼) - 선(행)  -  면(테이블)
+%TYPE    %ROWTYPE   TABLETYPE
+          RECORD TYPE
+          
+ROWTYPE : 행 전체를 저장할 수 있는 변수
+          컬럼이 많은 테이블의 값을 변수로 담을 때 컬럼별로 변수를 선언하지 않고
+          행단위로 한번만 선언을 하고 사용하므로 편의성이 증대된다.
+          
+DEPT 테이블의 10번 부서정보를 담을 수 있는 ROWTYPE을 선언하여 활용
+SET SERVEROUTPUT ON;
+DECLARE
+    -- 변수명 변수타입
+    V_dept_row /*테이블명%TABLETYPE*/ dept%ROWTYPE;
+BEGIN
+    SELECT * INTO V_dept_row
+    FROM dept
+    WHERE deptno = 10;
+    --컬럼의 값 접근 : rowtype.컬럼명
+    DBMS_OUTPUT.PUT_LINE( v_dept_row.dname || ' / ' || v_dept_row.loc);
+END;
+/
+
+RECORD TYPE : 개발자가 저장하려고하는 컬럼을 직접 지정 행에 대한 타입을 선언
+              (JAVA에서 클래스를 선언)
+선언방법
+TYPE 타입명 IS RECORD(
+--    컬럼명 컬럼타입,
+--    컬럼명2 컬럼타입,
+    ename EMP.ENAME%type,
+    dname dept.dname%type
+)
+
+DECLARE
+    --타입을 선언한 것
+    TYPE name_row IS RECORD(
+        ename EMP.ENAME%type,
+        dname dept.dname%type);
+    --변수명 변수타입
+    names name_row;
+BEGIN
+    SELECT ename, dname INTO names
+    FROM emp, dept
+    WHERE emp.deptno = dept.deptno
+        AND empno = 7839;
+    DBMS_OUTPUT.PUT_LINE(names.ename || ' / ' || names.dname);
+END;
+/
+
+TABLE TYPE : 여러행을 저장할 수 있는 타입
+TYPE 타입이름 IS RECORD
+TYPE 타입이름 IS TABLE OF 레코드 타입 / %ROWTYPE INDEX BY BINARY_INTEGER/*행정보표기*/
+int[] arr = new int[50];
+
+DECLARE
+    --타입을 선언한 것
+    TYPE name_row IS RECORD(
+         ename EMP.ENAME%type,
+         dname dept.dname%type);
+    TYPE name_tab IS TABLE OF name_row INDEX BY BINARY_INTEGER;
+    --변수명 변수타입
+    names name_tab;
+    
+    -- names[1]; ==> names(1) 인덱스의 시작이1번
+BEGIN                   -- into 단일, 여러개 담기
+    SELECT ename, dname BULK COLLECT INTO names
+    FROM emp, dept
+    WHERE emp.deptno = dept.deptno;
+    --PL/SQL FOR문
+    --for(int i = 0; i < names.length;)
+    FOR i IN 1..names.count LOOP -- i가 1부터 names의 길이만큼
+        DBMS_OUTPUT.PUT_LINE(names(i).ename || ' / ' || names(i).dname);
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE(names(1).ename || ' / ' || names(1).dname);
+    DBMS_OUTPUT.PUT_LINE(names(2).ename || ' / ' || names(2).dname);
+    DBMS_OUTPUT.PUT_LINE(names(3).ename || ' / ' || names(3).dname);
+    DBMS_OUTPUT.PUT_LINE(names(14).ename || ' / ' || names(14).dname);
+END;
+/
+
+
+CREATE OR REPLACE PROCEDURE printempno(p_empno emp.empno%TYPE) IS
+    V_ename emp.ename%TYPE;
+    V_dname dept.dname%TYPE;
+BEGIN
+    SELECT a.ename, b.dname INTO V_ename, V_dname
+    FROM emp a, dept b
+    WHERE a.deptno = b.deptno
+        AND a.empno = p_empno;
+    DBMS_OUTPUT.PUT_LINE(V_ename || ' / ' || V_dname);
+END;
+/
+
+
+2020-12-14 SQL WINDOW 실습문제
+
+SELECT empno, ename, sal
+FROM emp;
+
+SELECT *
+FROM salgrade;
+
+SELECT a.empno, a.ename, a.sal, b.grade
+FROM emp a, salgrade b
+WHERE a.sal between b.losal and b.hisal;
+--WHERE a.sal >= salgrade.losal
+--      AND a.sal <= salgrade.hisal;
+
+--부정형 조인
+14, 4 자신과 같은 번호를 제외!! 14*3하면 총 42개가 나온다.
+SELECT *
+FROM emp, dept
+WHERE emp.DEPTNO != dept.DEPTNO;
+
+실습 --3
+모든 사원에 대해 사원번호, 사원이름, 입사일자, 급여를 급여가 낮은 순으로
+조회 해보자. 급여가 동일할 경우 사원번호가 빠른 사람이 우선순위가 높다.
+
+우선순위가 가장 낮은 사람부터 본인까지의 급여 합을 새로운 컬럼으로 생성
+WINDOW 함수 없이...
+SELECT ROWNUM,(select empno, ename,sal
+                FROM emp
+                ORDER BY sal;)
+FROM emp;
+
+SELECT a.empno, a.ename, a.sal, SUM(b.sal)
+FROM 
+    (select empno, ename,sal
+    FROM emp
+    ORDER BY sal) a,
+    (select empno, ename,sal
+    FROM emp
+    ORDER BY sal) b
+WHERE a.sal >= b.sal
+GROUP BY a.empno, a.ename, a.sal
+ORDER BY a.sal;
+
+SELECT a.empno, a.ename, a.sal, SUM(b.sal)
+FROM emp a, emp b
+WHERE a.sal >= b.sal
+GROUP BY a.empno, a.ename, a.sal
+ORDER BY a.sal;
+
+SELECT a.empno, a.ename, a.sal, SUM(b.sal) c_sum
+FROM
+    (SELECT a.*, ROWNUM rn
+     FROM
+        (SELECT empno, ename, sal
+         FROM emp
+         ORDER BY sal, empno) a) a,
+    (SELECT a.*, ROWNUM rn
+     FROM
+        (SELECT empno, ename, sal
+         FROM emp
+         ORDER BY sal, empno) a) b
+ WHERE a.rn >= b.rn
+ GROUP BY a.empno, a.ename, a.sal
+ ORDER BY a.sal, a.empno;
+ 
+ ----WINDOWING 쓰기!! 분석함수
+ SELECT a.empno, a.ename,a.sal, sum(a.sal) OVER (ORDER BY sal, empno)
+ FROM emp a;
+ 
+ --실습 0번
+ 사원의 부서별 급여(SAL) 별 순위 구하기
+ EMP 테이블 사용
+ 1. 행을 임의로 생성 SINGLE ROW FUNCTION : LENGTH, LOWER
+ SINGLE ROW FUNCTION : LENGTH, LOWER
+ MULTI ROW FUNCTION : SUM , MAX, MIN
+ 
+ SELECT *
+ FROM dual; --행이 하나 컬럼이 하나.
+ --DUAL 은 TEST할때
+
+ SELECT LENGTH('hello, World') 
+ FROM emp;
+ --행을 임의로 만들어내고 번호를 중복되지 않게 만들려고.
+ SELECT dual.*, LEVEL
+ FROM dual
+ CONNECT BY LEVEL <= 10; --행 복제하기
+ 
+ SELECT LEVEL
+ FROM dual              -- 범용성을 위해
+ CONNECT BY LEVEL <= (SELECT COUNT(*) FROM emp);
+ 
+ 10 3
+ 20 5
+ 30 6
+ 
+ SELECT deptno, COUNT(*)
+ FROM emp
+ GROUP BY deptno;
+ 
+ ------------------------------------------
+SELECT  A.empno, a.sal, a.deptno, B.rn
+FROM
+    (SELECT ROWNUM r, a.*
+    FROM 
+        (SELECT empno, sal, deptno
+         FROM emp
+         ORDER BY deptno, sal, empno) a ) a, 
+     
+    (SELECT ROWNUM r, b.*
+     FROM 
+        (SELECT a.deptno, b.rn
+         FROM
+            (SELECT deptno, COUNT(*) cnt
+             FROM emp
+             GROUP BY deptno) a,
+        (SELECT LEVEL rn
+         FROM dual
+         CONNECT BY LEVEL <= (SELECT COUNT(*) FROM emp)) b
+WHERE a.cnt >= b.rn
+ORDER BY a.deptno, b.rn) b ) b
+WHERE a.r = b.r;
+    
+
+
+
+2020-12-15-01)제어문
+ - 프로그램의 진행 순서를 변경
+ - IF문이 제공
+ 1)IF 문
+ . 어플리케이션언어의 IF문과 같은 기능
+ (사용형식)
+ IF 조건식1 THEN
+    명령1
+ [ELSE
+    명령2;]
+ END IF;
+ 
+ (사용형식2)
+ IF 조건식1 THEN
+    명령1;
+    [ELSIF 조건식2 THEN
+        명령2;
+ ELSE
+    명령3;]
+ END IF;
+
+(사용형식3)
+ IF 조건식1 THEN
+    명령1;
+    IF 조건식2 THEN
+        명령;
+    [ELSIF 조건식2 THEN
+        명령2;
+     ELSE
+        명령3;]
+ ELSE
+    명령4;
+ END IF;
+ 
+ SET SERVEROUTPUT ON;
+ 예)키보드로 년도를 입력 받아 윤년인지 평년인지 판별하는 프로그램 작정
+ 
+ACCEPT P_YEAR PROMPT '년도 입력 : '
+DECLARE
+    --숫자형 변수 선언하려면 무조건 초기화 해줘야한다._NUMBER('&P_YEAR')
+    V_YEAR NUMBER := 0; -- 입력받은 년도
+    V_MESSAGE VARCHAR2(30); --결과 저장
+    --P_YEARE 문자 V_YEAR 숫자기 때문에 형변환이 필요하다.
+    --&은 주소값을 의미함.
+BEGIN
+    V_YEAR := TO_NUMBER('&P_YEAR');
+?    -- 윤년(4의 배수이면서(AND) 100의 배수가 아니거나(OR), 400의 배수가 되는 년도) 판별
+    -- IF(  ) OR (  )  THEN
+    IF (MOD(V_YEAR,4)=0 AND MOD(V_YEAR,100)<>0) OR (MOD(V_YEAR,400)=0) THEN
+        V_MESSAGE := V_YEAR ||'는 윤년입니다.';
+    ELSE
+        V_MESSAGE := V_YEAR ||'는 평년입니다.';
+    END IF;
+    DBMS_OUTPUT.PUT_LINE(V_MESSAGE);
+    EXCEPTION WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('예외발생 : ' || SQLERRM);
+END;
+/ --슬러쉬를 만나면 실행하라.는 명령어
+--주석처리를 삭제하니 잘 됨.
+ACCEPT P_YEAR PROMPT '년도 입력 : '
+DECLARE
+    V_YEAR NUMBER := 0; -- 입력받은 년도
+    V_MESSAGE VARCHAR2(30); --결과 저장
+BEGIN
+    V_YEAR := TO_NUMBER('&P_YEAR');
+    IF (MOD(V_YEAR,4)=0 AND MOD(V_YEAR,100)<>0) OR (MOD(V_YEAR,400)=0) THEN
+        V_MESSAGE := V_YEAR ||'는 윤년입니다.';
+    ELSE
+        V_MESSAGE := V_YEAR ||'는 평년입니다.';
+    END IF;
+    DBMS_OUTPUT.PUT_LINE(V_MESSAGE);
+    EXCEPTION WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('예외발생 : ' || SQLERRM);
+END;
+
+예)임의의 정수를(1~100) 입력하여 짝수인지 홀수인지 판단
+DECLARE
+    V_NUM NUMBER := 0;
+    V_RES VARCHAR2(50);
+BEGIN
+    V_NUM := ROUND(DBMS_RANDOM.VALUE(1,100));
+    IF MOD(V_NUM,2) =0 THEN
+        V_RES := V_NUM || '은 짝수';
+    ELSE
+        V_RES := V_NUM || '은 홀수';
+    END IF;
+    DBMS_OUTPUT.PUT_LINE(V_RES);
+END;
+
+예)LPROD테이블에 다음 데이터를 입력하시오
+    분류코드 : P501
+    분류명 : '축산가공식품'
+    
+DECLARE
+    V_CNT NUMBER := 0; --SELECT문의 결과(VIEW)의 행의 수
+    
+BEGIN
+    SELECT COUNT(*) INTO V_CNT
+    FROM LPROD
+    WHERE LPROD_GU='p501';
+    
+    IF V_CNT = 0 THEN
+        INSERT INTO LPROD -- 왜 이렇게 했는지 모르겠다.
+            SELECT MAX(LPROD_ID)+1, 'p501', '축산가공식품'
+            FROM LPROD;
+    END IF;
+    EXCEPTION WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('예외처리' || SQLERRM);
+END;
+
+DECLARE
+    V_CNT NUMBER := 0; --SELECT문의 결과(VIEW)의 행의 수
+    
+BEGIN
+    SELECT COUNT(*) INTO V_CNT
+    FROM LPROD_TEST
+    WHERE LPROD_GU='P501';
+    
+    IF V_CNT = 0 THEN
+        INSERT INTO LPROD_TEST(LPROD_GU, LPROD_NM) 
+            VALUES ('P501', '축산가공식품');--LPROD_ID+1을 해주기 위해서 SUQUERY를 사용.
+            --유일하게 INSERT INTO가 괄호가 안묶인다.
+    END IF;
+    EXCEPTION WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('예외처리' || SQLERRM);
+END;
+    SELECT * FROM LPROD_TEST;
+    
+문제] 위 예제에서 'P501' 분류코드에 분류명이 '임산물'로 입력하시오
+    단, 자료가 존재하면 갱신하시오
+    
+ACCEPT P_LPROD_NM PROMPT '분류명을 입력하시오 : '
+DECLARE
+    V_LPROD_NM LPROD.LPROD_NM%TYPE := '&P_LPROD_NM';
+    V_CNT NUMBER :=0;
+BEGIN
+    SELECT COUNT(*) INTO V_CNT
+    FROM LPROD
+    WHERE LPROD_GU = 'P501';
+    
+    IF V_CNT = 0 THEN
+        INSERT INTO LPROD
+            SELECT MAX(LPROD_ID)+1, 'P501', V_LPROD_NM
+            FROM LPROD;
+    ELSE
+        UPDATE LPROD
+            SET LPROD_NM = V_LPROD_NM
+        WHERE LPROD_GU = 'P501';
+    END IF;
+    EXCEPTION WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('예외처리' || SQLERRM);
+END;
+SELECT * FROM LPROD;   
+    
+    
+2020-12-15-02)커서(CURSOR)
+커서(CURSOR)
+커서는 select문 또는 데이터 조작어 같은 sql문을 실행했을 때 
+해당 SQL문을 처리하는 정보를 저장한 메모리 공간을 뜻한다. 
+커서를 사용하면 실행된 SQL문의 결과 값을 사용할 수 있게 되는데
+예를 들어 SELECT 문의 결과 값이 여러 행으로 나왔을 때 
+각 행별로 특정 작업을 수행하도록 기능을 구현하는 것이 가능하다.
+
+ - 쿼리의 실행에 영향 받은 행들의 집합(VIEW)
+ - 묵시적 커서와 명시적 커서로 구분
+
+ SELECT * FROM LPROD;
+ --VIEW는 쿼리다!
+ 
+ DECLARE 에서 선언 가능한 세가지
+ 변수, 상수, 커서
+ 
+ 1) 묵시적 커서(IMPLICIT CURSOR)
+ . SQL 명령이 실행 되면 자동으로 생성되는 커서
+ . 익명커서
+ . 실행결과의 출력이 종료됨과 동시에 CLOSE되어 사용자가 접근할 수 없음
+ . 커서 속성
+ ---------------------------------------------------------------
+ 속성명                설명
+ ---------------------------------------------------------------
+ SQL%FOUND            커서에 하나의 행이라도 존재하면 참(TRUE) 반환
+ SQL%NOTFOUND         커서에 하나의 행이라도 존재하면 거짓(FALSE) 반환
+ SQL%ISOPEN           커서가 OPEN되었으면 참
+ SQL%ROWCOUNT         커서에 포함된 행의 수
+
+ 예) 회원테이블에서 거주지가 '대전'인 회원의 이름을 자신의 이름으로 변경하고
+    몇건이 처리되었는지 확인하는 익명블록을 작성하시오.
+
+DECLARE
+BEGIN
+    UPDATE MEMBER
+    SET MEM_NAME = MEM_NAME
+    WHERE mem_add1 LIKE '대전%';
+    
+    DEMS_OUTPUT.PUT_LINE('처리건수 : ' || SQL%ROWOCUNT);
+END;
+
+ SELECT COUNT(*)
+ FROM MEMBER
+ WHERE mem_add1 LIKE '대전%';
+   -- 명시적 커서를 쓰면 서브쿼리의 갯수를 줄일 수 있다.
+ 2) 명시적 커서(EXPLICIT CURSOR)
+ . 사용자가 선언부에서 선언한 커서
+ . 커서의 사용 단계는 생성 -> OPEN -> FETCH -> CLOSE이다.
+ . 커서 결과집합을 행단위로 접근하여 참조된 데이터를 이용한 조작처리가 목적(SELECT문에 의한
+   커서 생성)
+ (선언형식)
+ CURSOR 커서명[(매개변수 [,매개변수,...])]
+    IS SELECT 문;
+ 예) 부서번호를 입력받아 해당부서에 소속된 사원번호와 사원이름을 출력하는 커서를 정의하시오
+ SELECT * FROM departments;
+ DECLARE
+    CURSOR cur_emp01(p_dept_id departments.department_id%TYPE) 
+    IS 
+      SELECT EMPLOYEE_ID, EMP_NAME
+        FROM EMPLOYEES
+        WHERE department_id = 60 --p_dept_id;
+ 
+ OPEN
+ . 커서를 사용하기 전에 반드시(FOR문 제외) OPEN 해야함
+ . OPEN명령은 실행부(BEGIN ~ END)에서 작성
+ (사용형식)
+ OPEN 커서명 [(매개변수, [,매개변수,...])]
+ 
+ 예)2005년 1월 분류코드별 매입수량과 매입금액합계를 구하는 커서
+ DECLARE
+    CURSOR cur_buy01 
+    IS
+        SELECT lprod_gu, lprod_nm
+        FROM lprod;
+    v_gu LPROD.LPROD_GU%TYPE;  --분류코드 
+    v_name LPROD.LPROD_NM%TYPE; --분류명
+    v_sum NUMBER :=0;  --매입수량합계
+    v_amt NUMBER :=0;  --매입금액합계
+ BEGIN 
+    OPEN cur_buy01;
+    LOOP
+        FETCH cur_buy01 INTO v_gu, v_name;
+        EXIT WHEN cur_buy01%NOTFOUND;
+        SELECT SUM(buy_qty * buy_cost), SUM(buy_qty) INTO v_sum, v_amt
+            FROM buyprod, prod
+            WHERE buy_prod = prod_id
+            AND prod_lgu = v_gu
+            AND buy_date between '20050101' AND '20050131';
+        DBMS_OUTPUT.PUT_LINE(v_name || '->' ||v_amt||', ' ||v_sum);
+        DBMS_OUTPUT.PUT_LINE('----------------------------------------');
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('처리건수 : ' || cur_buy01 % ROWCOUNT);
+    CLOSE cur_buy01;
+END;
+
+
+
+2020-12-16-01)
+2)반복문
+ 애플리케이션 개발언어의 반복문과 같은 기능 제공
+ - LOOP, WHILE, FOR문이 제공됨
+ 1)loop문
+ . 반복문 중 가장 기본적인 구조 제공
+ (사용형식)
+ LOOP
+    반복문처리문(들);
+    EXIT [WHEN 조건];
+    ..
+ END LOOP;
+ - 'EXIT [WHEN 조건];' : 조건이 LOOP문을 벗어나고, 거짓이면 다음 명령 수행
+ 
+ 예) 구구단의 5단을 출력하는 로직을 LOOP구문을 사용하여 작성하시오
+ SET SERVEROUTPUT ON;
+ ACCEPT p_base PROMPT '구할 구구단 입력 : ';
+ DECLARE
+    v_base NUMBER := &p_base; --단을 보관하는 변수
+    v_cnt NUMBER := 0; --곱해지는 수(1~9) 보관
+    v_res NUMBER := 0; --결과 보관
+ BEGIN
+    LOOP
+        v_cnt := v_cnt+1;
+        EXIT WHEN v_cnt > 9;
+        v_res := v_base*v_cnt;
+        DBMS_OUTPUT.PUT_LINE(v_base ||  ' * ' || v_cnt ||' = '|| v_res);
+    END LOOP;
+ END;
+ /
+ 
+ 예) 부서번호를 입력받아 해당부서에 소속된 사원번호와 사원이름을 출력하는 커서를 정의하시오.
+ ACCEPT p_id PROMPT '부서번호 : '
+ DECLARE
+    v_empid EMPLOYEES.EMPLOYEE_ID%TYPE;
+    v_name employees.emp_name%TYPE;
+     CURSOR cur_emp02(p_dept employees.department_id%TYPE)
+     IS
+        SELECT EMPLOYEE_ID, EMP_NAME
+        FROM EMPLOYEES
+        WHERE department_id = p_dept;
+ BEGIN
+    OPEN cur_emp02('&p_id');
+    LOOP
+        FETCH cur_emp02 INTO v_empid, v_name;
+        EXIT WHEN cur_emp02%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE(v_empid || ',  ' ||v_name);
+        DBMS_OUTPUT.PUT_LINE('------------------------');
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('처리건수 : ' ||cur_emp02%ROWCOUNT);--ROWCOUNT 행의 갯수를 세어준다.
+   CLOSE cur_emp02; 
+ END;
+ 
+ 2)WHILE문
+ . 개발언어의 WHILE과 같은 기능 제공
+ (사용형식)
+ WHILE 조건 LOOP
+    반복처리 명령문(들);
+        ..
+ END LOOP;
+ . '조건'이 참이면 반복수행, '조건'이 거짓이면 LOOP를 벗어남
+ 
+ 예) 구구단의 5단을 WHILE을 이용하여 작성
+ DECLARE
+    v_cnt NUMBER := 1;
+ BEGIN
+    WHILE v_cnt <= 9 LOOP
+        DBMS_OUTPUT.PUT_LINE('5*' || v_cnt || ' = ' || 5*v_cnt);
+        v_cnt := v_cnt+1;
+    END LOOP;
+ END;
+
+ 예) 1~50 사이에 존재하는 FIBONACCI NUMBER를 인쇄하시오.
+    FIBONACCI NUMBER : 1,1 가 주어지고 그 이후 수는 전 두수의 합
+    
+ DECLARE
+    vp_num number := 1; --전수
+    vpp_num number := 1; --전전수
+    vcur_num number := 0; --현재
+    v_res varchar2(100); --결과
+ BEGIN
+     v_res := '1, 1, ';
+    WHILE vcur_num <= 50 LOOP
+        vcur_num := vp_num + vpp_num;
+        v_res := v_res||vcur_num||', '; 
+        vpp_num :=vp_num;
+        vp_num := vcur_num;
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE(v_res);
+ END;
+ /
+  SELECT EMPLOYEE_ID, EMP_NAME
+        FROM EMPLOYEES;
+        WHERE department_id;
+ 예)회원테이블에서 거주지가 서울인 회원을 찾아 그 회원의 2005년 매출 정보를 조회하시오.
+ DECLARE
+    vid MEMBER.mem_id%TYPE;
+    v_name MEMBER.mem_name%TYPE;
+    v_tot NUMBER := 0; --구매총합계
+    CURSOR cur_cart01
+    IS
+        SELECT mem_id, mem_name
+        FROM member
+        WHERE mem_add1 LIKE '충남%';
+ BEGIN
+    OPEN cur_cart01;
+    FETCH cur_cart01 INTO v_id, v_name;
+    WHILE cur_cart01%FOUND LOOP
+        -- v_id에 저장된 회원의 매출액 계산
+        SELECT SUM(a.cart_qty * b.prod_price) INTO v_tot
+        FROM cart a, prod b
+        WHERE a.CART_PROD = b.prod_id
+            AND a.cart_member=v_id
+            AND a.cart_no LIKE '2005%';
+        
+        DBMS_OUTPUT.PUT_LINE('회원번호 : ' || v_id);
+        DBMS_OUTPUT.PUT_LINE('회원명 : ' || v_name);
+        DBMS_OUTPUT.PUT_LINE('구매금액 합계 : ' || v_tot);
+        DBMS_OUTPUT.PUT_LINE('------------------------------');
+        
+        FETCH cur_cart01 INTO v_id, v_name; 
+        --WHILE문에는 FETCH가 반드시 두개!와일문 밖에 다음사람 읽기위해
+    END LOOP;
+ END;
+    
+ 3) FOR문
+ .제어변수(INDEX)를 이용한 반복 수행
+ .제어변수(INDEX)는 시스템에서 자동설정(선언 불필요)
+ (사용형식)
+ FOR index IN [REVERSE] 초기값..최종값 LOOP
+    반복처리 명령문(들);
+ END LOOP;
+ 
+ 
+ 예)오늘의 요일을 구하는 프로그램을 작성
+    1)서기 1년 1월 1일부터 전년(2019년)12월 31일까지 경과된 일수
+    2)올해 1월 1일부터 전월마지막일까지 일수
+    3)금월 1일부터 오늘까지 일수
+    -----------------------------------------------------
+    1)2)3)의 합계를 7로 나눈 나머지 계산
+    --1)전년도까지 날짜 구하기
+ DECLARE
+    v_tot NUMBER := 0;
+    v_year NUMBER := EXTRACT(YEAR FROM SYSDATE);
+    v_month NUMBER := EXTRACT(MONTH FROM SYSDATE);
+    v_date NUMBER := EXTRACT(DAY FROM SYSDATE);
+    v_mi varchar2(50); ---요일 저장부분
+ BEGIN
+    FOR Y IN 1..v_year -1 LOOP --1부터 2019까지 돌아라
+        IF MOD(Y,4) = 0 AND MOD(Y,100) <> 0 OR (MOD(Y,400) = 0) THEN
+            v_tot := v_tot+366; --윤년
+        ELSE
+            v_tot := 365; --평년
+        END IF;
+    END LOOP;
+    -- 2)올해 1월 1일부터 전월 마지막일까지 일수
+    FOR M IN 1..v_month -1 LOOP
+        IF M=1 OR M=3 OR M = 5 OR M = 7 OR M = 8 OR M = 10 OR M = 12 THEN
+            v_tot := v_tot+31;
+        ELSIF M=4 OR M=6 OR M=9 OR M=11 THEN
+            v_tot := v_tot+30;
+        ELSE
+            IF (MOD(v_year,4)=0 AND MOD(v_year,100) <>0) OR (MOD(V_YEAR, 400)=0) THEN
+                v_tot := v_tot+29;
+            ELSE
+                v_tot := v_tot+28;
+            END IF;
+        END IF;
+    END LOOP;
+    
+    -- 3)금월 1일부터 오늘까지 일수
+    v_tot := v_tot+v_date; --
+    CASE MOD(v_tot,7)
+        WHEN 1 THEN v_mi := SYSDATE ||'는 월요일';
+        WHEN 2 THEN v_mi := SYSDATE ||'는 화요일';
+        WHEN 3 THEN v_mi := SYSDATE ||'는 수요일';
+        WHEN 4 THEN v_mi := SYSDATE ||'는 목요일';
+        WHEN 5 THEN v_mi := SYSDATE ||'는 금요일';
+        WHEN 6 THEN v_mi := SYSDATE ||'는 토요일';
+        WHEN 7 THEN v_mi := SYSDATE ||'는 일요일';
+    END CASE;
+    DBMS_OUTPUT.PUT_LINE(v_mi);
+ END;
+ 
+ **커서와 사용되는 FOR문
+ 1) 사용형식
+ FOR 레코드명 IN 커서명[(매개변수),...] LOOP
+    반복처리문;
+ END LOOP;
+ . '레코드명'은 시스템이 자동으로 할당함
+ . 커서내의 컬럼 접근은 '레코드명.컬럼명' 형식으로 접근
+ . OPEN, FETCH, CLOSE 문이 불필요함
+ 
+ 예) 부서번호를 입력 받아 사원번호, 사원명, 부서명을 출력하는 익명블록 작성
+
+ DECLARE
+    CURSOR cur_emp03(p_did employees.department_id%TYPE)
+    IS
+        SELECT a.employee_id eid, a.emp_name ename, b.department_name dname
+        FROM employees a, departments b
+        WHERE a.department_id = b.department_id
+            AND a.department_id = p_did;
+ BEGIN
+    FOR rec IN cur_emp03(60) LOOP
+        DBMS_OUTPUT.PUT_LINE(rec.eid || ', ' || rec.ename || ', ' || rec.dname);
+    END LOOP;
+ END;
+        
+ **커서와 사용되는 INLINE FOR문
+ 1) 사용형식
+ FOR 레코드명 IN 커서정의문 LOOP
+    반복처리문;
+ END LOOP;
+ . '레코드명'은 시스템이 자동으로 할당함
+ . 커서내의 컬럼 접근은 '레코드명.컬럼명' 형식으로 접근
+ . OPEN, FETCH, CLOSE 문이 불필요함
+ 
+ 예) 부서번호를 입력 받아 사원번호, 사원명, 부서명을 출력하는 익명블록 작성
+ 
+ ACCEPT p_did PROMPT '부서번호를 입력하시오 : '
+ DECLARE
+ BEGIN
+    FOR rec IN (SELECT a.employee_id eid, a.emp_name ename, b.department_name dname
+                FROM employees a, departments b
+                WHERE a.department_id = b.department_id
+                    AND a.department_id = '&p_did') LOOP
+        DBMS_OUTPUT.PUT_LINE(rec.eid || ', ' || rec.ename || ', ' || rec.dname);
+    END LOOP;
+ END;
+
+
+
+
+2020-12-17-01)저장 프로시져(Stored Procedure: Procedure)
+ - 특정 기능을 수행하여 하나의 결과를 도출하기 위한 명령의 모임
+ - 미리 컴파일되어 서버에 저장
+ - 사용자는 실행 가능한 프로시져명만 호출(네트웤의 트래픽 감소, 실행효율 증대, 보안확보)
+ - 반환값이 없음
+ SET SERVEROUTPUT ON;
+ (사용형식)
+ CREATE  [OR REPLACE] PROCEDURE 프로시저명[(
+    매개변수 [IN|OUT|INOUT] 타입명 [:=|DEFAULT 값],
+    .. -- INOUT은 앵간하면 사용X
+    .. -- IN을 사용할 때 그냥 생략해도 된다. 그럼 자동으로 입력으로 인식
+    매개변수 [IN|OUT|INOUT] 타입명/*크기 지정하면 안된다.*/ [:=|DEFAULT 값])]
+ IS|AS
+    선언부;
+ BEGIN
+    실행부
+    [EXCEPTION
+        예외처리부;
+    ]
+    END;
+ (실행문 사용형식)
+ EXEC|EXECUTE 프로시져명(매개변수,...) --단독실행
+ 
+ 익명블록이나 다른 함수 등에서는
+ 프로시져명(매개변수,...);
+ 
+ **재고수불테이블을 생성하시오
+ 테이블명 : REMAIN
+ 컬럼명        데이터타입           NULLTABLE           PK/FK 여부    DEFAULT VALUE
+ ----------------------------------------------------------------------------------
+ REMAIN_YEAR    CHAR(4)           N.N                PK
+ REMAIN_PROD    VARCHAR2(10)      N.N                PK/FK
+ REMAIN_J_00    NUMBER(5)                                               0
+ REMAIN_I       NUMBER(5)                                               0
+ REMAIN_O       NUMBER(5)                                               0
+ REMAIN_J_99    NUMBER(5)                                               
+ REMAIN_DATE    DATE           
+ 
+ -- 00 ->기초재고
+ -- I -> 입고슈량 합계
+ -- O -> 출고수량
+ -- 99 ->기말재고
+ 
+ CREATE TABLE REMAIN(
+    REMAIN_YEAR     CHAR(4),      
+    REMAIN_PROD     VARCHAR2(10),
+    REMAIN_J_00     NUMBER(5) DEFAULT 0,
+    REMAIN_I        NUMBER(5) DEFAULT 0,
+    REMAIN_O        NUMBER(5) DEFAULT 0,
+    REMAIN_J_99     NUMBER(5) DEFAULT 0,
+    REMAIN_DATE     DATE,
+    
+    --PK설정
+    CONSTRAINT pk_remain PRIMARY KEY(REMAIN_YEAR,REMAIN_PROD),
+    CONSTRAINT fk_remain_pord FOREIGN KEY(REMAIN_PROD)
+        REFERENCES PROD(PROD_ID));
+        
+**PROD테이블의 상품번호와 적정재고(PROD_PRODERSTOCK)를 REMAIN테이블의 REMAIN_PROD와
+  REMAIN_J_00(기초재고)에 삽입하시오. 또 REMAIN_YEAR는 '2005'이고 날짜는
+  '2005/01/01'이다.
+  
+  INSERT INTO remain(remain_year, remain_prod, remain_j_00, remain_j_99, REMAIN_DATE)
+    SELECT '2005', PROD_ID, PROD_PROPERSTOCK, PROD_PROPERSTOCK, TO_DATE('20050101')
+        FROM prod;
+    
+ SELECT * FROM REMAIN;
+ 
+ 예)2005년 1월 모든 상품별 매입수량을 조회하고 재고수불테이블을 UPDATE하시오
+    PROCEDURE 사용
+ (모든 상품별 매입수량)
+ SELECT PROD_ID, NVL(SUM(buy_qty),0)
+    FROM prod
+    LEFT OUTER JOIN buyprod ON(prod_id = buy_prod
+        AND buy_date BETWEEN '20050101' AND '20050131')
+    GROUP BY prod_id
+    ORDER BY 1;
+    select * from dept
+ (프로시져 생성)
+ CREATE OR REPLACE PROCEDURE proc_buyprod01(
+    p_id IN prod.prod_id%TYPE,
+    p_qty IN number) --매개변수들
+    IS
+    BEGIN
+        UPDATE remain
+        SET remain_i = remain_i + p_qty,
+            remain_j_99 = remain_j_99 + p_qty,
+            remain_date = TO_DATE('20050131')
+        WHERE remain_prod = p_id --기본키가 복합키로 되어 있을때(두개의 기본키)
+                                -- 서로 조회를 시켜서 index를 맞춰야 한다!
+            AND remain_year = '2005';
+    END;
+        
+ (실행)
+ DECLARE 
+    CURSOR cur_buyprod01
+    IS
+        SELECT PROD_ID, NVL(SUM(buy_qty),0) AS amt
+        FROM prod
+        LEFT OUTER JOIN buyprod ON(prod_id = buy_prod
+            AND buy_date BETWEEN '20050101' AND '20050131')
+        GROUP BY prod_id
+        ORDER BY 1;
+ BEGIN
+    FOR rec_buyprod IN cur_buyprod01 LOOP
+        prod_buyprod01(rec_buyprod.prod_id, rec_buyprod.amt);
+    END LOOP;
+ END;
+ 
+ SELECT * FROM remain;
+ 
+ 예)한명의 회원 id를 입력받아 회원의 이름과 주소, 마일리지를 출력하는 프로시져를 작성하시오.
+ CREATE OR REPLACE PROCEDURE proc_mem01(
+    p_id member.mem_id%TYPE)
+ IS 
+    v_name member.mem_name%TYPE;
+    v_addr VARCHAR2(100);
+    v_mile member.mem_mileage%TYPE;
+ BEGIN
+    SELECT mem_name, mem_add1 || ' ' || mem_add2, NVL(mem_mileage,0) INTO v_name, v_addr, v_mile
+    FROM member
+    WHERE mem_id = p_id;
+    
+    DBMS_OUTPUT.PUT_LINE('회원명 : ' || v_name);
+    DBMS_OUTPUT.PUT_LINE('주소 : ' || v_addr);
+    DBMS_OUTPUT.PUT_LINE('마일리지 : ' || v_mile);
+ END;
+ 
+ (실행)
+ select * from member;
+ EXECUTE proc_mem01('d001');
+ 
+ 
+ -- 프로시져 안에서 실행하지 않기. 조금 더 고급스러운 방법?
+ CREATE OR REPLACE PROCEDURE proc_mem01(
+    p_id IN member.mem_id%TYPE,
+    p_name OUT member.mem_name%TYPE,
+    p_addr OUT VARCHAR2,
+    p_mile OUT member.mem_mileage%TYPE)
+ IS 
+ BEGIN --자동으로 3개의 값p_name, p_addr, p_mile이 튀어나온다.
+    SELECT mem_name, mem_add1 || ' ' || mem_add2, NVL(mem_mileage,0) INTO p_name, p_addr, p_mile
+    FROM member
+    WHERE mem_id = p_id;
+ END;
+ 
+ select * from member;
+ 
+(실행)-- 익명블록에서 실행시킨다.
+DECLARE
+    v_name member.mem_name%TYPE;
+    v_addr VARCHAR2(100);
+    v_mile member.mem_mileage%TYPE;
+BEGIN -- procedure 안에서 execute는 실행하는게 아니다.
+    proc_mem01('r001', v_name, v_addr, v_mile);
+    DBMS_OUTPUT.PUT_LINE('회원명 : '||v_name);
+    DBMS_OUTPUT.PUT_LINE('주소 : '||v_addr);
+    DBMS_OUTPUT.PUT_LINE('마일리지 : '||v_mile);
+END;
+
+(실행2) 거주지가 충남인 사람 뽑기
+DECLARE
+    v_name member.mem_name%TYPE;
+    v_addr VARCHAR2(100);
+    v_mile member.mem_mileage%TYPE;
+    
+    CURSOR cur_name02
+    IS
+        SELECT mem_id 
+        FROM member
+        WHERE mem_add1 like '충남%';
+BEGIN 
+    FOR rmem IN cur_name02 LOOP
+        proc_mem01(rmem.mem_id, v_name, v_addr, v_mile);    
+    
+        DBMS_OUTPUT.PUT_LINE('회원명 : '||v_name);
+        DBMS_OUTPUT.PUT_LINE('주소 : '||v_addr);
+        DBMS_OUTPUT.PUT_LINE('마일리지 : '||v_mile);
+        DBMS_OUTPUT.PUT_LINE('-----------------------------');
+    END LOOP;        
+END;
+
+ SELECT mem_id 
+        FROM member
+        WHERE mem_add1 like '충남%';
+ -CUROR 복수개의 자료를 처리해야할 경우
+ RMEM.MEM_ID 자리에 여러개의 값이 들어와 처리 할 경우
+ CURSOR와 반복문을 써서 값을 집어넣어준다.
+ 
+ 문제] 상품코드와 월을 입력 받아 해당상품의 입고수량과 출고수량을 조회하여 출력하는
+    프로시져를 작성하시오 [PROCEDURE 이름 : proc_cb_info)
+    select * from cart
+    order by cart_prod;
+    select * from buyprod;
+    
+CREATE OR REPLACE PROCEDURE proc_cb_info(
+    p_prod IN BUYPROD.BUY_PROD%TYPE,
+    p_prod1 OUT buyprod.buy_prod%TYPE,
+    p_bqty OUT BUYPROD.BUY_QTY%TYPE,
+    p_cqty OUT CART.CART_QTY%TYPE)
+    IS
+BEGIN
+    SELECT a.buy_prod, SUM(a.BUY_QTY), SUM(b.CART_QTY)
+        INTO p_prod1, p_bqty, p_cqty
+    FROM buyprod a, cart b
+    WHERE a.buy_prod = b.cart_prod;
+END;
+
+EXEC proc_cb_info('P101000002');
+ SELECT a.buy_prod, SUM(a.BUY_QTY), SUM(b.CART_QTY)
+    FROM buyprod a, cart b
+    WHERE a.buy_prod = b.cart_prod
+        AND EXTRACT(MONTH FROM a.BUY_DATE) = '01'
+    GROUP BY a.buy_prod
+    ORDER BY a.buy_prod;
+        
+-- 하나의 열
+DECLARE
+    v_prod buyprod.buy_prod%TYPE;
+    v_bqty BUYPROD.BUY_QTY%TYPE;--입고
+    v_cqty CART.CART_QTY%TYPE;--출고
+BEGIN
+    proc_cb_info('P101000001', '20050101', v_prod, v_bqty, v_cqty);
+    DBMS_OUTPUT.PUT_LINE('상품명 : ' || v_prod);
+    DBMS_OUTPUT.PUT_LINE('주소 : ' || v_bqty);
+    DBMS_OUTPUT.PUT_LINE('마일리지 : ' || v_cqty);
+end;
+
+DECLARE
+    v_prod buyprod.buy_prod%TYPE;
+    v_bqty BUYPROD.BUY_QTY%TYPE;--입고
+    v_cqty CART.CART_QTY%TYPE;--출고
+    
+    CURSOR cur_date01
+    IS
+        SELECT 
+        
+답
+CREATE OR REPLACE PROCEDURE proc_cb_info(
+    p_code IN prod.prod_id%TYPE,
+    p_month IN CHAR,
+    p_oamt OUT NUMBER,
+    p_iamt OUT NUMBER)
+IS
+    v_date date := to_date('2005'||p_month||'01');
+BEGIN
+    SELECT SUM(buy_qty) INTO p_iamt
+    FROM buyprod
+    WHERE buy_date BETWEEN v_date AND last_day(v_date)
+        AND buy_prod = p_code;
+    
+    SELECT SUM(cart_qty) INTO p_oamt
+    FROM cart
+    WHERE substr(cart_no,1,6) = SUBSTR(REPLACE(TO_CHAR(v_date),'/'),1,6)
+        AND cart_prod=p_code;
+END;
+commit;
+select nvl(max(board_id), 0) + 1 as board_id from TB_JDBC_BOARD;
+select * from tb_jdbc_board;
+
+insert into TB_JDBC_BOARD values (2, 'bb', 'bbb', 'bbbbb', '20201216');
+select * from TB_JDBC_BOARD;
+(실행)
+DECLARE
+    v_iamt NUMBER := 0;
+    v_oamt NUMBER := 0;
+    v_name prod.prod_name%TYPE;
+BEGIN
+    SELECT prod_name INTO v_name
+    FROM prod
+    WHERE prod_id = 'P101000006';
+    proc_cb_info('P101000006','04', v_oamt, v_iamt);
+    DBMS_OUTPUT.PUT_LINE('상품코드 : ' || 'P101000006');
+    DBMS_OUTPUT.PUT_LINE('상품명 : ' || v_name);
+    DBMS_OUTPUT.PUT_LINE('매출수량 : ' || v_oamt);
+    DBMS_OUTPUT.PUT_LINE('매입수량 : ' || v_iamt);
+END;
+ 
+
+
+
+
+
+2020-12-21-01)
+[PL/SQL] 함수(user defined function : FUNCTION) 2020-12-21
+- 프로시져와 비슷한 구조(단, 반환값이 존재해야 함)
+- 일반 내장함수처럼 사용 가능
+- (사용형식)
+
+    ```sql
+    :CREATE [OR REPLACE] FUNCTION 함수명(
+        매개변수 [IN|OUT|INOUT] 타입명/*크기지정X*/ [:=DEFAULT 값],
+                :
+        매개변수 [IN|OUT|INOUT] 타입명/*크기지정X*/ [:=DEFAULT 값]
+        RETURN 타입명/*BEGIN에 있는 RETURN 타입과 같은 타입이어야 한다. 
+    									;도 붙지 않는다.*/
+
+     IS|AS
+        선언부
+     BEGIN
+        실행부
+        RETURN 값;
+     END;
+        . 실행부에 반드시 하나이상의 RETURN 문이 존재해야함.
+    ```
+
+### 예) 상품테이블에서 상품코드를 입력 받아 해당 상품의 2005년 매입수량을 조회하는 함수를 작성하시오.
+(함수처리영역 : 입력 받은 상품코드에 해당하는 상품의 2005년 매입수량을 조회)
+
+- CODE
+
+    ```sql
+    CREATE OR REPLACE FUNCTION fn_buyqty(p_code IN prod.prod_id%TYPE)
+        RETURN varchar2
+    IS
+        v_amt number(5):=0; --2005년도 상품별 매입수량집계
+        v_sum number:=0; --2005년도 상품별 매입금액집계
+        v_res varchar2(50);
+    BEGIN
+        SELECT SUM(buy_qty),
+               SUM(buy_qty*buy_cost) INTO v_amt, v_sum
+        FROM buyprod
+        WHERE buy_prod = p_code
+            AND buy_date BETWEEN '20050101' AND '20051231';
+        v_res:='매입수량 : '||to_char(v_amt)||', '||'매입금액 : ' ||to_char(v_sum);
+        RETURN v_res;
+    END;
+
+    (실행) --OUTER JOIN과 같은 결과를 가지고 온다.
+    SELECT prod_id AS 상품코드,
+           prod_name AS 상품코드,
+           fn_buyqty(prod_id) AS 매입현황
+    FROM prod
+    --WHERE fn_buyqty(prod_id) >= 100;
+    ```
+
+### 예)거주지가 충남인 회원들의 2005년 상반기 매출액을 조회하시오.
+
+(함수영역 : 입력된 회원들의 2005년 상반기 매출액을 조회)
+
+- CODE
+
+    ```sql
+    select * from member;
+    select * from cart;
+    select * from prod;
+
+    (함수) -- 상반기 매출액
+    CREATE OR REPLACE FUNCTION fn_cart01(p_memid IN member.mem_id%TYPE)
+        RETURN number
+    IS
+        v_sum number:= 0;
+    BEGIN
+        SELECT sum(cart_qty * prod_price) INTO v_sum
+        FROM cart, prod
+        WHERE cart_prod = prod_id -- JOIN 조건
+            AND cart_member = p_memid --파라미터 값 비교
+            AND SUBSTR(cart_no,1,6) BETWEEN '200501' AND '200506'; --일반 조건
+    RETURN v_sum;
+    END;
+
+    (실행 : 거주지가 충남인 회원번호 검색)
+    SELECT mem_name 회원명,
+           NVL(fn_cart01(mem_id),0) 구입액합계  
+    FROM member
+    WHERE mem_add1 LIKE '충남%';
+    ```
+
+### 예)현재 계정에 존재하는 사용자 이름을 출력하는 함수를 작성하시오
+
+- CODE (함수 뒤의 ()여부)
+
+    ```sql
+    CREATE OR REPLACE FUNCTION fn_get_user
+        RETURN VARCHAR2
+    IS
+        v_name VARCHAR2(50);
+    BEGIN
+        SELECT user INTO v_name
+        FROM dual;
+    RETURN v_name;
+    END;
+
+    (실행)
+    SELECT fn_get_user, fn_get_user()/*함수 뒤에 ()가 있어도 되고 없어도된다.*/ FROM dual;
+    ```
+
+
+
+2020-12-21-02)트리거(trigger)
+
+- 어떤 이벤트가 발생되면 그 이벤트로 인하여 다른 테이블의 값이 자동으로
+변경(삽입/update,삭제) 되도록 구성된 프로시져
+- 데이터 무결성 유지
+
+    (사용형식)
+    create trigger 트리거명
+    [before|after] [insert|update|delete]
+    on 테이블명
+    [for each row]
+    [when 조건]
+    [declare]
+    선언부; 필요없으면 생략해도 된다.
+    begin
+    트리거 처리문 ;
+    end;
+    .before|after : 트리거의 timming, 생략하면 after로 간주
+    트리거 수행(트리거 처리문)이 이벤트 발생 전이면 before,
+    이벤트 발생 후이면 after를 기술
+    .'insert|update|delete' : 트리거 이벤트, 트리거를 발생시키는 원인으로
+    or 연산자를 이용하여 복수개 정의 가능(ex insert or delete)
+
+    .'for each row' : 행단위 트리거 발생시 기술, 생략하면 문장단위 트리거
+
+    .'when 조건' : 행단위 트리거에서만 사용하며 트리거 이벤트에서 정의된 테이블에 이벤트가
+    발생할 때 보다 구체적인 데이터 검색 조건부여시 사용
+
+    - * 행단위와 문장단위 트리거
+    (1) 문장단위 트리거 : 이벤트 발생시 오직 한번만 트리거 발생(많이 사용하지 않음)
+    (2) 행단위 트리거 : 'for each row' 기술
+    이벤트 결과 각 행마다 트리거 수행,
+    의사레코드(pesudo record) 인 :new, :old 사용 가능
+    대부분의 트리거가 속함
+    단, 한 트리거 수행이 완료되지 않은 상태에서 또 다른 트리거를 호출
+    할 경우 시스템에 의해 트리거 강제 종류
+
+    예) 분류테이블에 새로운자료를 입력하고 입력이 정상적으로 처리되었으면
+    '신규 분류자료가 정상 입력되었습니다.!!' 메세지를 출력하는 트리거를 작성하시오
+    [자료]
+    분류코드 : p502
+    순번 : 12
+    분류명 : 농산물
+
+    create trigger tg_lprod01
+    after insert on lprod
+    begin
+    dbms_output.put_line( '신규 분류자료가 정상 입력되었습니다.!!');
+    end;
+
+    insert into lprod
+    values(12,'p502','농산물');
+    select * from lprod;
+
+    예) 입고테이블(buyprod)에서 2월과 3월 입고된 상품별 매입수량을 조회하여 재고수불테이블을
+    수정하시오.
+    (서브쿼리 : 2월과 3월 입고된 상품별 매입수량을 조회)
+
+    SELECT buy_prod,
+    SUM(buy_qty)
+    FROM buyprod
+    WHERE buy_date BETWEEN '20050201' AND '20050331'
+    GROUP BY buy_prod
+    ORDER BY 1;
+
+    (메인쿼리 : remain테이블 UPDATE)
+    UPDATE remain a
+    SET (a.remain_i, a.remain_j_99, a.remain_date) =
+    (SELECT a.remain_i + b.iamt, a.remain_j_99 + b.iamt, to_date('20050331')
+    FROM (SELECT buy_prod AS bid,
+    SUM(buy_qty) AS iamt
+    FROM buyprod
+    WHERE buy_date BETWEEN '20050201' AND '20050331'
+    GROUP BY buy_prod) b
+    WHERE a.remain_prod = b.bid)
+    WHERE a.remain_year = '2005'
+    AND a.remain_prod IN (SELECT DISTINCT buy_prod
+    FROM buyprod
+    WHERE buy_date BETWEEN '20050201' AND '20050331')
+    select * from remain;
+
+    ## 예) 오늘이 2005년 4월 1일이라고 가정하고 다음 자료를 장바구니 테이블에 입력하시오.
+    장바구니테이블에 입력된 후 재고수불테이블을 수정하시오
+    입력자료 : (29, 21, 0, 50, 2005-01-31:remain테이블의 자료)
+    구매회원 : c001
+    구매상품 : P302000014
+    구매수량 : 5
+
+    (트리거)
+    CREATE OR REPLACE TRIGGER tg_cart_insert
+    AFTER INSERT ON cart
+    FOR EACH ROW
+    BEGIN
+    UPDATE remain
+    SET remain_o = remain_o + :new.cart_qty,
+    remain_j_99 = remain_j_99 - :new.cart_qty,
+    remain_date ='20050401'
+    WHERE remain_prod = :new.cart_prod
+    AND remain_year = '2005';
+    END;
+
+    rollback;
+    select * from remain;
+    SELECT * FROM cart;
+    (실행 : CART테이블에 자료가 삽입된 후)
+    INSERT INTO cart
+    SELECT 'c001', max(cart_no) + 1, 'P302000014', 5
+    FROM cart
+    WHERE SUBSTR(cart_no, 1, 8) = '20050401'
+
+
+2020-12-22-01)
+**의사레코드
+    1) :new
+    - insert와 update에서 사용
+    - 데이터가 삽입(갱신)될 때 새로 입력된 값을 지칭함
+    - delete 시에는 모든 칼럼이 null값이 됨
+    
+    2) :old
+    - delete와 update에서 사용
+    - 데이터가 삭제(갱신)될 때 저장되어 있던 값
+    - insert 시에는 모든 칼럼이 null값이 됨
+    
+**트리거 함수
+    - 트리거를 촉발시킨 event의 종류를 판단할 때 사용
+    1) inserting : 트리거된 문장이 insert이면 true
+    2) updating : 트리거된 문장이 update이면 true
+    3) deleting : 트리거된 문장이 delete이면 true
+    
+예) 오늘이 2005년 4월 20일이라 가정하고 매입상품 'P2010000001'의 매입수량을 15개에서
+    25개로 수정하시오.
+    수정 후 재고수불테이블의 자료도 변경될 수 있도록 트리거를 작성하시오.
+    
+    (트리거 생성)
+CREATE OR REPLACE TRIGGER tg_buyprod_update
+    AFTER INSERT OR UPDATE OR DELETE ON buyprod
+    FOR EACH ROW
+DECLARE
+    v_qty NUMBER:= 0; -- 제품매입수량
+    v_prod prod.prod_id%TYPE; -- 상품코드
+BEGIN 
+    IF inserting THEN
+        v_qty := NVL(:new.buy_qty, 0);
+        v_prod := :new.buy_prod;
+    ELSIF updating THEN
+        v_qty := :new.buy_qty - :old.buy_qty;
+        v_prod := :new.buy_prod;
+    ELSE
+        v_qty := :old.buy_qty;
+        v_prod := :old.buy_prod;
+    END IF;
+    
+    UPDATE remain
+    SET remain_i = remain_i + v_qty,
+        remain_j_99 = remain_j_99 + v_qty
+    WHERE remain_year = '2005'
+    AND remain_prod = v_prod;
+    
+    DBMS_OUTPUT.PUT_LINE('추가 변경 수량 : ' || v_qty);
+    
+--    --예외발생시
+--    EXCEPTION
+--        WHEN other THEN
+--            DBMS_OUTPUT.PUT_LINE('예외발생:' || SQLERRM);
+END;
+
+예) 오늘이 2005년 4월 20일이라 가정하고 매입상품 'P2010000001'의 매입수량을 15개에서
+    25개로 수정하시오.
+    수정 후 재고수불테이블의 자료도 변경될 수 있도록 트리거를 작성하시오.
+
+(매입장 갱신 또는 삽입)
+DECLARE
+    v_cnt NUMBER := 0; --2005년 4월 20일 'P2010000001' 상품정보 존재여부 판단
+    v_qty NUMBER := 0;
+BEGIN
+    SELECT COUNT(*) INTO v_cnt
+    FROM buyprod
+    WHERE buy_prod = 'P201000001'
+    AND buy_date = TO_DATE('20050420');
+    
+    IF v_cnt = 1 THEN -- UPDATE 필요
+        UPDATE buyprod
+        SET buy_qty = buy_qty + v_qty
+        WHERE buy_prod = 'P2010000001'
+            AND buy_date = TO_DATE('20050420');
+    ELSE
+        INSERT INTO buyprod
+            VALUES('20050420', 'P2010000001', v_qty, 21000);
+    END IF;
+END;
+        
+
+    

@@ -40,3 +40,7 @@ FROM(
     WHERE ROWNUM <= 2) a, TYPE b
 WHERE a.type_lgu = b.type_lgu;
 
+SELECT rownum, a.*, b.* 
+FROM movie a, type b
+WHERE a.type_lgu = b.type_lgu
+    AND movie_name like '%¸¶%';

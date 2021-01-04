@@ -25,3 +25,48 @@ WHERE alias_code = 'flex1'
 
 SELECT * FROM movie;
 SELECT * FROM score;
+
+
+--paging
+SELECT *
+FROM
+    (SELECT ROWNUM rn, A.*
+     FROM 
+        (SELECT a.movie_name, a.movie_opendate, b.type_name, a.movie_viewcnt
+         FROM movie a, type b
+         WHERE a.type_lgu = b.type_lgu
+            AND movie_opendate is not null
+         ORDER BY movie_viewcnt desc) A )
+WHERE rn BETWEEN (7 -1) * 10 + 1 AND (7 * 10);
+
+SELECT a.*
+FROM (
+        SELECT ROWNUM as rn, movie.* 
+        FROM movie
+        WHERE movie_opendate is not null) a
+WHERE a.rn BETWEEN (:PAGE - 1) * 10 + 1 AND (:PAGE*10);
+
+SELECT *
+FROM
+    (SELECT ROWNUM rn, A.*
+     FROM 
+        (SELECT a.movie_name, a.movie_opendate, b.type_name, a.movie_viewcnt
+         FROM movie a, type b
+         WHERE a.type_lgu = b.type_lgu
+            AND movie_opendate is not null
+         ORDER BY movie_viewcnt desc) A )
+WHERE rn BETWEEN (:page -1) * 10 + 1 AND (:page * 10);
+
+ SELECT *
+ FROM
+ 	(SELECT ROWNUM rn, A.*
+     FROM
+         (SELECT a.movie_name, a.movie_opendate, b.type_name, a.movie_viewcnt
+		  FROM member a, type b
+		  WHERE a.type_lgu = b.type_lgu
+		  AND movie_opendate is not null
+		  ORDER BY movie_viewcnt desc) A )
+WHERE rn BETWEEN (1 -1) * 10 + 1 AND (1 * 10);
+
+
+
